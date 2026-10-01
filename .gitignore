@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Next.js build output
+.next/
+**/.next/
+out/
+**/out/
+build/
+**/build/
+
+# Environment files (commit the examples, never the real values)
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+
+# Local databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+**/prisma/dev.db
+**/prisma/dev.db-journal
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Vercel
+.vercel
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini

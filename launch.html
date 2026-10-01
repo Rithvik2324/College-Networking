@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IntentLink Campus | Launch</title>
+  <meta
+    name="description"
+    content="See the campus rollout model for IntentLink Campus and join the network through the browser-based flow."
+  >
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">IL</span>
+        <span>
+          <strong>IntentLink Campus</strong>
+          <small>College collaboration operating system</small>
+        </span>
+      </a>
+      <button
+        id="nav-toggle"
+        class="nav-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="site-nav"
+        aria-label="Open navigation"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div id="site-nav" class="nav-shell">
+        <nav class="nav">
+          <a href="index.html">Home</a>
+          <a href="features.html">Features</a>
+          <a href="match.html">Match</a>
+          <a href="workspace.html">Workspace</a>
+          <a href="rules.html">Rules</a>
+          <a href="launch.html">Launch</a>
+        </nav>
+        <a class="button button-primary nav-cta" href="launch.html#waitlist">Join Network</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel page-hero">
+        <p class="eyebrow">Campus Launch System</p>
+        <h1 class="page-title">How this platform rolls out in real student ecosystems.</h1>
+        <p class="hero-text page-copy">
+          This page is for rollout strategy and joining the network. It keeps the launch story and the registration flow together.
+        </p>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Rollout</p>
+            <h2>Launch in small, high-intent cohorts first.</h2>
+          </div>
+        </div>
+        <div class="roadmap">
+          <article>
+            <span>Step 1</span>
+            <h3>Seed Early Builders</h3>
+            <p>Start with hackathon teams, project clubs, and startup-minded students who already need better coordination.</p>
+          </article>
+          <article>
+            <span>Step 2</span>
+            <h3>Run Small Cohorts</h3>
+            <p>Keep the first wave focused on small high-intent groups so the quality standard becomes visible quickly.</p>
+          </article>
+          <article>
+            <span>Step 3</span>
+            <h3>Expand Through Ambassadors</h3>
+            <p>Grow across years and departments using visible wins, campus ambassadors, and student-led trust.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="waitlist" class="panel cta-panel">
+        <div>
+          <p class="eyebrow">Join The Network</p>
+          <h2>Enter the network and start collaborating.</h2>
+          <p>
+            This section acts as a direct browser-based join flow. Students can register interest, choose an active intent,
+            and save their entry locally as part of the live front-end MVP.
+          </p>
+        </div>
+        <form id="waitlist-form" class="waitlist-form">
+          <label>
+            <span>Full Name</span>
+            <input id="waitlist-name" type="text" placeholder="Enter your name" required>
+          </label>
+          <label>
+            <span>College Email</span>
+            <input id="waitlist-email" type="email" placeholder="name@college.edu" required>
+          </label>
+          <label>
+            <span>Preferred Intent</span>
+            <select id="waitlist-intent" required>
+              <option value="Hackathon-Ready">Hackathon-Ready</option>
+              <option value="Project-Building">Project-Building</option>
+              <option value="Startup Exploration">Startup Exploration</option>
+              <option value="Learning-Only">Learning-Only</option>
+            </select>
+          </label>
+          <button class="button button-primary" type="submit">Join Now</button>
+        </form>
+        <p id="waitlist-message" class="waitlist-message" aria-live="polite"></p>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

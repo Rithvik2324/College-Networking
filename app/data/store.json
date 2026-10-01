@@ -1,0 +1,186 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Aarav Mehta",
+      "email": "aarav@college.edu",
+      "passwordHash": "$2b$10$zSWFtFx1hDcR71wfxivEp.OnvI.TvJJILp3T9XO/v2GQgnXkR6Hm2",
+      "intent": "Hackathon-Ready",
+      "skill": "Backend",
+      "availability": 12,
+      "interests": [
+        "Hackathons",
+        "APIs",
+        "AI"
+      ],
+      "bio": "Builds resilient backend systems and loves shipping fast prototypes.",
+      "role": "student",
+      "createdAt": "2026-10-01T10:02:50.289Z"
+    },
+    {
+      "id": 2,
+      "name": "Saanvi Rao",
+      "email": "saanvi@college.edu",
+      "passwordHash": "$2b$10$B0F3bwtNtD.yFa/2M2Vbc.yhZTlD.TO7yCHShJJFW28KvNsB7VbBO",
+      "intent": "Hackathon-Ready",
+      "skill": "UI/UX",
+      "availability": 9,
+      "interests": [
+        "Design systems",
+        "Research",
+        "Startup product"
+      ],
+      "bio": "Designs crisp product experiences and prototypes with intent.",
+      "role": "student",
+      "createdAt": "2026-10-01T10:02:50.349Z"
+    },
+    {
+      "id": 3,
+      "name": "Ishaan Patel",
+      "email": "ishaan@college.edu",
+      "passwordHash": "$2b$10$ZFPK.WNF1g939OGq5THj6e9uFXfp.tSBjpVDroVyVw6usfL1H86I2",
+      "intent": "Project-Building",
+      "skill": "Frontend",
+      "availability": 10,
+      "interests": [
+        "Web apps",
+        "Accessibility",
+        "Team systems"
+      ],
+      "bio": "Builds polished interfaces and product-ready experiences.",
+      "role": "student",
+      "createdAt": "2026-10-01T10:02:50.410Z"
+    },
+    {
+      "id": 4,
+      "name": "Meera Nair",
+      "email": "meera@college.edu",
+      "passwordHash": "$2b$10$M.H2G4HJijfpJQgk8EtFEO88Q8N/T16OVS4quW9re/yhojxKHKsdy",
+      "intent": "Project-Building",
+      "skill": "AI/ML",
+      "availability": 11,
+      "interests": [
+        "ML",
+        "Analytics",
+        "Research"
+      ],
+      "bio": "Works at the intersection of product insight and machine learning.",
+      "role": "student",
+      "createdAt": "2026-10-01T10:02:50.472Z"
+    },
+    {
+      "id": 5,
+      "name": "Campus Admin",
+      "email": "admin@college.edu",
+      "passwordHash": "$2b$10$7323sCkrXbsGntShEcV/9uZWQDH4v7JXXmbtVI71dcIc0MKkyN.MO",
+      "intent": "Project-Building",
+      "skill": "Backend",
+      "availability": 8,
+      "interests": [
+        "Governance",
+        "Operations"
+      ],
+      "bio": "Platform administrator overseeing college-wide governance.",
+      "role": "admin",
+      "createdAt": "2026-10-01T10:02:50.533Z"
+    }
+  ],
+  "communities": [
+    {
+      "id": 1,
+      "name": "Sprint Lab Alpha",
+      "goal": "Build a hackathon-ready campus collaboration prototype",
+      "intent": "Hackathon-Ready",
+      "timeline": "1 Week",
+      "ownerId": 1,
+      "memberIds": [
+        1,
+        2
+      ],
+      "stage": "Execute",
+      "isPrivate": false,
+      "createdAt": "2026-10-01T10:02:50.533Z"
+    },
+    {
+      "id": 2,
+      "name": "Build Circle Studio",
+      "goal": "Ship a working project collaboration portal for campus clubs",
+      "intent": "Project-Building",
+      "timeline": "2 Weeks",
+      "ownerId": 3,
+      "memberIds": [
+        3,
+        4
+      ],
+      "stage": "Create",
+      "isPrivate": false,
+      "createdAt": "2026-10-01T10:02:50.533Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "communityId": 1,
+      "title": "Finalize landing page flow",
+      "assigneeId": 2,
+      "status": "Review",
+      "priority": "High",
+      "dueDate": "2026-10-08",
+      "createdAt": "2026-10-01T10:02:50.533Z"
+    },
+    {
+      "id": 2,
+      "communityId": 1,
+      "title": "Connect matching logic to profiles",
+      "assigneeId": 1,
+      "status": "In Progress",
+      "priority": "Critical",
+      "dueDate": "2026-10-07",
+      "createdAt": "2026-10-01T10:02:50.533Z"
+    },
+    {
+      "id": 3,
+      "communityId": 2,
+      "title": "Define sprint milestones",
+      "assigneeId": 4,
+      "status": "To Do",
+      "priority": "Medium",
+      "dueDate": "2026-10-11",
+      "createdAt": "2026-10-01T10:02:50.533Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": 1,
+      "communityId": 1,
+      "senderId": 1,
+      "text": "Let’s lock the final flow by tonight and test the prototype tomorrow.",
+      "createdAt": "2026-10-01T10:02:50.533Z"
+    },
+    {
+      "id": 2,
+      "communityId": 1,
+      "senderId": 2,
+      "text": "I’ll refine the screens and make the layout easier for mobile users.",
+      "createdAt": "2026-10-01T10:02:50.533Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": 1,
+      "userId": 2,
+      "type": "task-assignment",
+      "message": "You were assigned to finalize the landing page flow.",
+      "read": false,
+      "createdAt": "2026-10-01T10:02:50.533Z"
+    },
+    {
+      "id": 2,
+      "userId": 1,
+      "type": "community-update",
+      "message": "Sprint Lab Alpha moved into the execution stage.",
+      "read": false,
+      "createdAt": "2026-10-01T10:02:50.533Z"
+    }
+  ]
+}

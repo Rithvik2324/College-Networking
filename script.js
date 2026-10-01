@@ -63,6 +63,67 @@ const seedActivity = [
   "Learning cohort completed its first cycle and can now be archived."
 ];
 
+const groupNames = {
+  "Hackathon-Ready": "Sprint Lab Alpha",
+  "Project-Building": "Build Circle Studio",
+  "Startup Exploration": "Venture Pod Nexus",
+  "Learning-Only": "Peer Lab Commons"
+};
+
+const groupDescriptions = {
+  "Hackathon-Ready": "A fast-moving micro-community optimized for short deadlines, complementary tech skills, and rapid demo delivery.",
+  "Project-Building": "A balanced build team focused on consistent weekly progress, clear responsibilities, and completion discipline.",
+  "Startup Exploration": "A discovery-driven group that blends product, technical, and validation thinking before full commitment.",
+  "Learning-Only": "A low-pressure cohort for guided exploration, peer support, and skill-building before joining higher-intensity teams."
+};
+
+const suggestedTaskLibrary = {
+  "Hackathon-Ready": "Prepare final hackathon pitch and demo flow",
+  "Project-Building": "Break the project into milestone-based deliverables",
+  "Startup Exploration": "Interview 5 target users and summarize insights",
+  "Learning-Only": "Plan next peer-learning session and reading list"
+};
+
+const intentOrder = ["Hackathon-Ready", "Project-Building", "Startup Exploration", "Learning-Only"];
+
+let selectedTaskGroupId = null;
+let state = loadState();
+
+const matcherForm = document.querySelector("#matcher-form");
+const studentNameInput = document.querySelector("#student-name");
+const intentSelect = document.querySelector("#intent-select");
+const skillSelect = document.querySelector("#skill-select");
+const availabilityRange = document.querySelector("#availability-range");
+const availabilityValue = document.querySelector("#availability-value");
+const teammateList = document.querySelector("#teammate-list");
+const groupName = document.querySelector("#group-name");
+const groupSummary = document.querySelector("#group-summary");
+const compatibilityBadge = document.querySelector("#compatibility-badge");
+
+const studentForm = document.querySelector("#student-form");
+const studentFormMessage = document.querySelector("#student-form-message");
+const groupForm = document.querySelector("#group-form");
+const groupFormMessage = document.querySelector("#group-form-message");
+const directoryIntentFilter = document.querySelector("#directory-intent-filter");
+const studentDirectory = document.querySelector("#student-directory");
+const groupBoard = document.querySelector("#group-board");
+const groupOwnerSelect = document.querySelector("#group-owner");
+const taskGroupSelect = document.querySelector("#task-group-select");
+const taskAssigneeSelect = document.querySelector("#task-assignee");
+const taskBoard = document.querySelector("#task-board");
+const taskForm = document.querySelector("#task-form");
+const taskFormMessage = document.querySelector("#task-form-message");
+const platformMetrics = document.querySelector("#platform-metrics");
+const activityFeed = document.querySelector("#activity-feed");
+const archiveInactiveButton = document.querySelector("#archive-inactive");
+const addSuggestedTaskButton = document.querySelector("#add-suggested-task");
+
+const waitlistForm = document.querySelector("#waitlist-form");
+const waitlistMessage = document.querySelector("#waitlist-message");
+
+const navToggle = document.querySelector("#nav-toggle");
+const topbar = document.querySelector(".topbar");
+
 function createInitialState() {
   return {
     students: seedStudents,
@@ -90,60 +151,6 @@ function loadState() {
   }
 }
 
-let state = loadState();
-
-const matcherForm = document.querySelector("#matcher-form");
-const studentNameInput = document.querySelector("#student-name");
-const intentSelect = document.querySelector("#intent-select");
-const skillSelect = document.querySelector("#skill-select");
-const availabilityRange = document.querySelector("#availability-range");
-const availabilityValue = document.querySelector("#availability-value");
-const teammateList = document.querySelector("#teammate-list");
-const groupName = document.querySelector("#group-name");
-const groupSummary = document.querySelector("#group-summary");
-const compatibilityBadge = document.querySelector("#compatibility-badge");
-
-const studentForm = document.querySelector("#student-form");
-const studentFormMessage = document.querySelector("#student-form-message");
-const groupForm = document.querySelector("#group-form");
-const groupFormMessage = document.querySelector("#group-form-message");
-const directoryIntentFilter = document.querySelector("#directory-intent-filter");
-const studentDirectory = document.querySelector("#student-directory");
-const groupBoard = document.querySelector("#group-board");
-const groupOwnerSelect = document.querySelector("#group-owner");
-const taskGroupSelect = document.querySelector("#task-group-select");
-const taskAssigneeSelect = document.querySelector("#task-assignee");
-const taskBoard = document.querySelector("#task-board");
-const taskForm = document.querySelector("#task-form");
-const platformMetrics = document.querySelector("#platform-metrics");
-const activityFeed = document.querySelector("#activity-feed");
-const archiveInactiveButton = document.querySelector("#archive-inactive");
-const addSuggestedTaskButton = document.querySelector("#add-suggested-task");
-
-const waitlistForm = document.querySelector("#waitlist-form");
-const waitlistMessage = document.querySelector("#waitlist-message");
-
-const groupNames = {
-  "Hackathon-Ready": "Sprint Lab Alpha",
-  "Project-Building": "Build Circle Studio",
-  "Startup Exploration": "Venture Pod Nexus",
-  "Learning-Only": "Peer Lab Commons"
-};
-
-const groupDescriptions = {
-  "Hackathon-Ready": "A fast-moving micro-community optimized for short deadlines, complementary tech skills, and rapid demo delivery.",
-  "Project-Building": "A balanced build team focused on consistent weekly progress, clear responsibilities, and completion discipline.",
-  "Startup Exploration": "A discovery-driven group that blends product, technical, and validation thinking before full commitment.",
-  "Learning-Only": "A low-pressure cohort for guided exploration, peer support, and skill-building before joining higher-intensity teams."
-};
-
-const suggestedTaskLibrary = {
-  "Hackathon-Ready": "Prepare final hackathon pitch and demo flow",
-  "Project-Building": "Break the project into milestone-based deliverables",
-  "Startup Exploration": "Interview 5 target users and summarize insights",
-  "Learning-Only": "Plan next peer-learning session and reading list"
-};
-
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
@@ -160,6 +167,34 @@ function getStudentById(id) {
 
 function getGroupById(id) {
   return state.groups.find((group) => group.id === id);
+}
+
+function setMessage(element, text, type = "") {
+  if (!element) {
+    return;
+  }
+
+  element.textContent = text;
+  element.classList.remove("is-success", "is-error");
+
+  if (type) {
+    element.classList.add(`is-${type}`);
+  }
+}
+
+function isInstitutionalEmail(email) {
+  const normalized = email.trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.(edu|ac\.in|edu\.in)$/i.test(normalized);
+}
+
+function updateNavState(isOpen) {
+  if (!navToggle || !topbar) {
+    return;
+  }
+
+  topbar.classList.toggle("nav-open", isOpen);
+  navToggle.setAttribute("aria-expanded", String(isOpen));
+  navToggle.setAttribute("aria-label", isOpen ? "Close navigation" : "Open navigation");
 }
 
 function availabilityGapScore(a, b) {
@@ -219,6 +254,10 @@ function updateMatches(event) {
     event.preventDefault();
   }
 
+  if (!studentNameInput || !intentSelect || !skillSelect || !availabilityRange || !teammateList || !groupName || !groupSummary || !compatibilityBadge) {
+    return;
+  }
+
   const user = {
     name: studentNameInput.value.trim() || "You",
     intent: intentSelect.value,
@@ -244,34 +283,69 @@ function updateMatches(event) {
 }
 
 function renderOwnerOptions() {
-  const options = state.students
+  if (!groupOwnerSelect) {
+    return;
+  }
+
+  groupOwnerSelect.innerHTML = state.students
     .map((student) => `<option value="${student.id}">${student.name} - ${student.intent}</option>`)
     .join("");
-
-  groupOwnerSelect.innerHTML = options;
 }
 
 function renderTaskGroupOptions() {
+  if (!taskGroupSelect || !addSuggestedTaskButton) {
+    return;
+  }
+
   const activeGroups = state.groups.filter((group) => group.stage !== "Archive");
-  taskGroupSelect.innerHTML = activeGroups
-    .map((group) => `<option value="${group.id}">${group.name}</option>`)
-    .join("");
+  const fallbackGroupId = activeGroups[0]?.id ?? null;
+  const nextGroupId = activeGroups.some((group) => group.id === selectedTaskGroupId) ? selectedTaskGroupId : fallbackGroupId;
+
+  taskGroupSelect.innerHTML = activeGroups.length
+    ? activeGroups.map((group) => `<option value="${group.id}">${group.name}</option>`).join("")
+    : '<option value="">No active groups</option>';
+
+  selectedTaskGroupId = nextGroupId;
+
+  if (selectedTaskGroupId !== null) {
+    taskGroupSelect.value = String(selectedTaskGroupId);
+  }
+
+  const hasGroups = activeGroups.length > 0;
+  taskGroupSelect.disabled = !hasGroups;
+  addSuggestedTaskButton.disabled = !hasGroups;
 }
 
 function renderTaskAssigneeOptions() {
+  if (!taskAssigneeSelect || !taskGroupSelect) {
+    return;
+  }
+
   const selectedGroup = getGroupById(Number(taskGroupSelect.value));
   const memberIds = selectedGroup?.memberIds ?? [];
-  taskAssigneeSelect.innerHTML = memberIds
+  const options = memberIds
     .map((memberId) => {
       const member = getStudentById(memberId);
       return member ? `<option value="${member.id}">${member.name}</option>` : "";
     })
     .join("");
+
+  taskAssigneeSelect.innerHTML = options || '<option value="">No group members</option>';
+  taskAssigneeSelect.disabled = !memberIds.length;
 }
 
 function renderStudents() {
+  if (!studentDirectory || !directoryIntentFilter) {
+    return;
+  }
+
   const intentFilter = directoryIntentFilter.value;
   const students = state.students.filter((student) => intentFilter === "All" || student.intent === intentFilter);
+
+  if (!students.length) {
+    studentDirectory.innerHTML = '<div class="empty-state">No students match this intent filter yet. Try another intent or add a new student.</div>';
+    return;
+  }
 
   studentDirectory.innerHTML = students
     .map((student) => {
@@ -298,6 +372,15 @@ function renderStudents() {
 }
 
 function renderGroups() {
+  if (!groupBoard) {
+    return;
+  }
+
+  if (!state.groups.length) {
+    groupBoard.innerHTML = '<div class="empty-state">No communities created yet. Start one from the form above to activate the workspace.</div>';
+    return;
+  }
+
   groupBoard.innerHTML = state.groups
     .map((group) => {
       const owner = getStudentById(group.ownerId);
@@ -318,7 +401,7 @@ function renderGroups() {
         .join("");
 
       return `
-        <article class="group-card">
+        <article class="group-card" data-stage="${group.stage}">
           <div class="directory-top">
             <div>
               <h4>${group.name}</h4>
@@ -331,7 +414,7 @@ function renderGroups() {
           <p>Owner: <strong>${owner ? owner.name : "Unknown"}</strong></p>
           <div class="member-list">${members || "<span>No members yet</span>"}</div>
           <div class="group-actions">
-            <button class="button button-secondary small" type="button" data-action="advance-stage" data-group-id="${group.id}">Advance Stage</button>
+            <button class="button button-secondary small" type="button" data-action="advance-stage" data-group-id="${group.id}" ${group.stage === "Archive" ? "disabled" : ""}>${group.stage === "Complete" ? "Move To Archive" : group.stage === "Archive" ? "Archived" : "Advance Stage"}</button>
             <button class="button button-secondary small" type="button" data-action="archive-group" data-group-id="${group.id}">Archive</button>
           </div>
           <div class="group-actions">
@@ -344,10 +427,22 @@ function renderGroups() {
 }
 
 function renderTasks() {
+  if (!taskBoard || !taskGroupSelect || !taskAssigneeSelect || !taskForm) {
+    return;
+  }
+
   const selectedGroupId = Number(taskGroupSelect.value);
   const tasks = state.tasks.filter((task) => task.groupId === selectedGroupId);
+  const selectedGroup = getGroupById(selectedGroupId);
+  const submitButton = taskForm.querySelector("button[type='submit']");
 
-  taskBoard.innerHTML = tasks.length
+  if (submitButton) {
+    submitButton.disabled = !selectedGroup || !taskAssigneeSelect.value;
+  }
+
+  taskBoard.innerHTML = !selectedGroup
+    ? '<div class="empty-state">Create or reactivate a group to assign tasks here.</div>'
+    : tasks.length
     ? tasks
         .map((task) => {
           const assignee = getStudentById(task.assigneeId);
@@ -364,10 +459,14 @@ function renderTasks() {
           `;
         })
         .join("")
-    : '<p class="hint-text">No tasks yet for this group. Add one to start execution.</p>';
+    : '<div class="empty-state">No tasks yet for this group. Add one to start execution.</div>';
 }
 
 function renderMetrics() {
+  if (!platformMetrics) {
+    return;
+  }
+
   const activeGroups = state.groups.filter((group) => group.stage !== "Archive").length;
   const completedGroups = state.groups.filter((group) => group.stage === "Complete").length;
   const archivedGroups = state.groups.filter((group) => group.stage === "Archive").length;
@@ -384,12 +483,20 @@ function renderMetrics() {
 }
 
 function renderActivity() {
+  if (!activityFeed) {
+    return;
+  }
+
   activityFeed.innerHTML = state.activity
     .map((entry) => `<article class="activity-item">${entry}</article>`)
     .join("");
 }
 
-function renderApp() {
+function renderWorkspaceApp() {
+  if (!studentForm && !groupForm && !studentDirectory && !groupBoard && !taskBoard && !platformMetrics) {
+    return;
+  }
+
   renderOwnerOptions();
   renderTaskGroupOptions();
   renderTaskAssigneeOptions();
@@ -398,250 +505,362 @@ function renderApp() {
   renderTasks();
   renderMetrics();
   renderActivity();
-  updateMatches();
 }
 
 function nextIntent(currentIntent) {
-  const intents = ["Hackathon-Ready", "Project-Building", "Startup Exploration", "Learning-Only"];
-  const index = intents.indexOf(currentIntent);
-  return intents[(index + 1) % intents.length];
+  const index = intentOrder.indexOf(currentIntent);
+  return intentOrder[(index + 1) % intentOrder.length];
 }
 
-studentForm.addEventListener("submit", (event) => {
-  event.preventDefault();
+function setupWorkspaceEvents() {
+  if (studentForm) {
+    studentForm.addEventListener("submit", (event) => {
+      event.preventDefault();
 
-  const name = document.querySelector("#new-student-name").value.trim();
-  const email = document.querySelector("#new-student-email").value.trim();
-  const intent = document.querySelector("#new-student-intent").value;
-  const skill = document.querySelector("#new-student-skill").value;
-  const availability = Number(document.querySelector("#new-student-availability").value);
+      const name = document.querySelector("#new-student-name")?.value.trim() || "";
+      const email = document.querySelector("#new-student-email")?.value.trim() || "";
+      const intent = document.querySelector("#new-student-intent")?.value || "";
+      const skill = document.querySelector("#new-student-skill")?.value || "";
+      const availability = Number(document.querySelector("#new-student-availability")?.value);
 
-  const newStudent = {
-    id: state.counters.student++,
-    name,
-    email,
-    intent,
-    skill,
-    availability,
-    verified: email.includes("@"),
-    lastActiveDays: 0
-  };
+      if (!name || !email) {
+        setMessage(studentFormMessage, "Enter both name and college email before adding a student.", "error");
+        return;
+      }
 
-  state.students.push(newStudent);
-  studentForm.reset();
-  studentFormMessage.textContent = `${name} joined the campus network with ${intent} intent.`;
-  addActivity(`${name} completed onboarding and joined the verified student network.`);
-  saveState();
-  renderApp();
-});
+      if (!isInstitutionalEmail(email)) {
+        setMessage(studentFormMessage, "Use a valid college email ending like .edu, .ac.in, or .edu.in.", "error");
+        return;
+      }
 
-groupForm.addEventListener("submit", (event) => {
-  event.preventDefault();
+      if (state.students.some((student) => student.email.toLowerCase() === email.toLowerCase())) {
+        setMessage(studentFormMessage, "That student email is already part of the campus network.", "error");
+        return;
+      }
 
-  const name = document.querySelector("#group-title").value.trim();
-  const goal = document.querySelector("#group-goal").value.trim();
-  const intent = document.querySelector("#group-intent").value;
-  const timeline = document.querySelector("#group-timeline").value;
-  const ownerId = Number(groupOwnerSelect.value);
+      state.students.push({
+        id: state.counters.student++,
+        name,
+        email,
+        intent,
+        skill,
+        availability,
+        verified: true,
+        lastActiveDays: 0
+      });
 
-  const group = {
-    id: state.counters.group++,
-    name,
-    goal,
-    intent,
-    timeline,
-    ownerId,
-    memberIds: [ownerId],
-    stage: "Create",
-    lastActiveDays: 0
-  };
-
-  state.groups.unshift(group);
-  groupForm.reset();
-  groupFormMessage.textContent = `${name} was created and is ready for members to join.`;
-  addActivity(`${name} was created for ${intent} collaboration.`);
-  saveState();
-  renderApp();
-});
-
-directoryIntentFilter.addEventListener("change", renderStudents);
-
-studentDirectory.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-action='cycle-intent']");
-  if (!button) {
-    return;
+      studentForm.reset();
+      setMessage(studentFormMessage, `${name} joined the campus network with ${intent} intent.`, "success");
+      addActivity(`${name} completed onboarding and joined the verified student network.`);
+      saveState();
+      renderWorkspaceApp();
+    });
   }
 
-  const student = getStudentById(Number(button.dataset.studentId));
-  if (!student) {
-    return;
+  if (groupForm) {
+    groupForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const name = document.querySelector("#group-title")?.value.trim() || "";
+      const goal = document.querySelector("#group-goal")?.value.trim() || "";
+      const intent = document.querySelector("#group-intent")?.value || "";
+      const timeline = document.querySelector("#group-timeline")?.value || "";
+      const ownerId = Number(groupOwnerSelect?.value);
+
+      if (!name || !goal || !ownerId) {
+        setMessage(groupFormMessage, "Complete all group details before creating a micro-community.", "error");
+        return;
+      }
+
+      state.groups.unshift({
+        id: state.counters.group++,
+        name,
+        goal,
+        intent,
+        timeline,
+        ownerId,
+        memberIds: [ownerId],
+        stage: "Create",
+        lastActiveDays: 0
+      });
+
+      selectedTaskGroupId = state.groups[0].id;
+      groupForm.reset();
+      setMessage(groupFormMessage, `${name} was created and is ready for members to join.`, "success");
+      addActivity(`${name} was created for ${intent} collaboration.`);
+      saveState();
+      renderWorkspaceApp();
+    });
   }
 
-  student.intent = nextIntent(student.intent);
-  student.lastActiveDays = 0;
-  addActivity(`${student.name} switched intent to ${student.intent}.`);
-  saveState();
-  renderApp();
-});
-
-groupBoard.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-action]");
-  if (!button) {
-    return;
+  if (directoryIntentFilter) {
+    directoryIntentFilter.addEventListener("change", renderStudents);
   }
 
-  const action = button.dataset.action;
-  const group = getGroupById(Number(button.dataset.groupId));
-  if (!group) {
-    return;
+  if (studentDirectory) {
+    studentDirectory.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action='cycle-intent']");
+      if (!button) {
+        return;
+      }
+
+      const student = getStudentById(Number(button.dataset.studentId));
+      if (!student) {
+        return;
+      }
+
+      student.intent = nextIntent(student.intent);
+      student.lastActiveDays = 0;
+      addActivity(`${student.name} switched intent to ${student.intent}.`);
+      saveState();
+      renderWorkspaceApp();
+    });
   }
 
-  if (action === "join-group") {
-    const studentId = Number(button.dataset.studentId);
-    if (!group.memberIds.includes(studentId) && group.memberIds.length < 6) {
-      group.memberIds.push(studentId);
+  if (groupBoard) {
+    groupBoard.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) {
+        return;
+      }
+
+      const action = button.dataset.action;
+      const group = getGroupById(Number(button.dataset.groupId));
+      if (!group) {
+        return;
+      }
+
+      if (action === "join-group") {
+        const studentId = Number(button.dataset.studentId);
+        if (!group.memberIds.includes(studentId) && group.memberIds.length < 6) {
+          group.memberIds.push(studentId);
+          group.lastActiveDays = 0;
+          const student = getStudentById(studentId);
+          addActivity(`${student?.name || "A student"} joined ${group.name}.`);
+        }
+      }
+
+      if (action === "advance-stage") {
+        const order = ["Create", "Execute", "Complete", "Archive"];
+        const nextStage = order[Math.min(order.indexOf(group.stage) + 1, order.length - 1)];
+        group.stage = nextStage;
+        group.lastActiveDays = 0;
+        if (nextStage === "Archive" && selectedTaskGroupId === group.id) {
+          selectedTaskGroupId = null;
+        }
+        addActivity(`${group.name} moved to ${nextStage} stage.`);
+      }
+
+      if (action === "archive-group") {
+        group.stage = "Archive";
+        if (selectedTaskGroupId === group.id) {
+          selectedTaskGroupId = null;
+        }
+        addActivity(`${group.name} was archived to prevent inactive clutter.`);
+      }
+
+      saveState();
+      renderWorkspaceApp();
+    });
+  }
+
+  if (taskGroupSelect) {
+    taskGroupSelect.addEventListener("change", () => {
+      selectedTaskGroupId = Number(taskGroupSelect.value) || null;
+      renderTaskAssigneeOptions();
+      renderTasks();
+    });
+  }
+
+  if (taskForm) {
+    taskForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const title = document.querySelector("#task-title")?.value.trim() || "";
+      const groupId = Number(taskGroupSelect?.value);
+      const assigneeId = Number(taskAssigneeSelect?.value);
+
+      if (!title || !groupId || !assigneeId) {
+        setMessage(taskFormMessage, "Choose an active group, an assignee, and a task title before assigning work.", "error");
+        return;
+      }
+
+      state.tasks.unshift({
+        id: state.counters.task++,
+        groupId,
+        title,
+        assigneeId,
+        done: false
+      });
+
+      const group = getGroupById(groupId);
+      if (group) {
+        group.lastActiveDays = 0;
+      }
+
+      addActivity(`Task added to ${group?.name || "selected group"} for execution tracking.`);
+      taskForm.reset();
+      setMessage(taskFormMessage, `Task assigned inside ${group?.name || "the selected group"}.`, "success");
+      saveState();
+      renderWorkspaceApp();
+    });
+  }
+
+  if (taskBoard) {
+    taskBoard.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action='toggle-task']");
+      if (!button) {
+        return;
+      }
+
+      const task = state.tasks.find((item) => item.id === Number(button.dataset.taskId));
+      if (!task) {
+        return;
+      }
+
+      task.done = !task.done;
+      const group = getGroupById(task.groupId);
+      addActivity(`${task.title} in ${group?.name || "group"} was marked ${task.done ? "done" : "pending"}.`);
+      saveState();
+      renderWorkspaceApp();
+    });
+  }
+
+  if (archiveInactiveButton) {
+    archiveInactiveButton.addEventListener("click", () => {
+      let archivedCount = 0;
+
+      state.groups.forEach((group) => {
+        group.lastActiveDays += 3;
+        if (group.lastActiveDays >= 7 && group.stage !== "Archive") {
+          group.stage = "Archive";
+          if (selectedTaskGroupId === group.id) {
+            selectedTaskGroupId = null;
+          }
+          archivedCount += 1;
+        }
+      });
+
+      addActivity(
+        archivedCount
+          ? `${archivedCount} inactive groups were archived automatically by governance rules.`
+          : "Governance check completed. No additional groups needed archiving."
+      );
+      saveState();
+      renderWorkspaceApp();
+    });
+  }
+
+  if (addSuggestedTaskButton) {
+    addSuggestedTaskButton.addEventListener("click", () => {
+      const group = getGroupById(Number(taskGroupSelect?.value));
+      if (!group || !group.memberIds.length) {
+        setMessage(taskFormMessage, "Create an active group with at least one member before adding suggested work.", "error");
+        return;
+      }
+
+      const suggestedTask = suggestedTaskLibrary[group.intent];
+      const duplicateExists = state.tasks.some(
+        (task) => task.groupId === group.id && task.title.toLowerCase() === suggestedTask.toLowerCase()
+      );
+
+      if (duplicateExists) {
+        setMessage(taskFormMessage, "That suggested task already exists for this group.", "error");
+        return;
+      }
+
+      state.tasks.unshift({
+        id: state.counters.task++,
+        groupId: group.id,
+        title: suggestedTask,
+        assigneeId: group.memberIds[0],
+        done: false
+      });
+
       group.lastActiveDays = 0;
-      const student = getStudentById(studentId);
-      addActivity(`${student?.name || "A student"} joined ${group.name}.`);
-    }
+      addActivity(`Suggested execution task added to ${group.name}.`);
+      setMessage(taskFormMessage, `Suggested task added to ${group.name}.`, "success");
+      saveState();
+      renderWorkspaceApp();
+    });
   }
+}
 
-  if (action === "advance-stage") {
-    const order = ["Create", "Execute", "Complete", "Archive"];
-    const nextStage = order[Math.min(order.indexOf(group.stage) + 1, order.length - 1)];
-    group.stage = nextStage;
-    group.lastActiveDays = 0;
-    addActivity(`${group.name} moved to ${nextStage} stage.`);
-  }
-
-  if (action === "archive-group") {
-    group.stage = "Archive";
-    addActivity(`${group.name} was archived to prevent inactive clutter.`);
-  }
-
-  saveState();
-  renderApp();
-});
-
-taskGroupSelect.addEventListener("change", () => {
-  renderTaskAssigneeOptions();
-  renderTasks();
-});
-
-taskForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  const title = document.querySelector("#task-title").value.trim();
-  const groupId = Number(taskGroupSelect.value);
-  const assigneeId = Number(taskAssigneeSelect.value);
-
-  state.tasks.unshift({
-    id: state.counters.task++,
-    groupId,
-    title,
-    assigneeId,
-    done: false
-  });
-
-  const group = getGroupById(groupId);
-  if (group) {
-    group.lastActiveDays = 0;
-  }
-
-  addActivity(`Task added to ${group?.name || "selected group"} for execution tracking.`);
-  taskForm.reset();
-  saveState();
-  renderApp();
-});
-
-taskBoard.addEventListener("click", (event) => {
-  const button = event.target.closest("button[data-action='toggle-task']");
-  if (!button) {
+function setupMatchEvents() {
+  if (!matcherForm || !availabilityRange || !availabilityValue || !intentSelect || !skillSelect || !studentNameInput) {
     return;
   }
 
-  const task = state.tasks.find((item) => item.id === Number(button.dataset.taskId));
-  if (!task) {
-    return;
-  }
-
-  task.done = !task.done;
-  const group = getGroupById(task.groupId);
-  addActivity(`${task.title} in ${group?.name || "group"} was marked ${task.done ? "done" : "pending"}.`);
-  saveState();
-  renderApp();
-});
-
-archiveInactiveButton.addEventListener("click", () => {
-  let archivedCount = 0;
-
-  state.groups.forEach((group) => {
-    group.lastActiveDays += 3;
-    if (group.lastActiveDays >= 7 && group.stage !== "Archive") {
-      group.stage = "Archive";
-      archivedCount += 1;
-    }
+  availabilityRange.addEventListener("input", () => {
+    availabilityValue.textContent = `${availabilityRange.value} hrs/week`;
+    updateMatches();
   });
 
-  addActivity(
-    archivedCount
-      ? `${archivedCount} inactive groups were archived automatically by governance rules.`
-      : "Governance check completed. No additional groups needed archiving."
-  );
-  saveState();
-  renderApp();
-});
+  matcherForm.addEventListener("submit", updateMatches);
+  intentSelect.addEventListener("change", updateMatches);
+  skillSelect.addEventListener("change", updateMatches);
+  studentNameInput.addEventListener("input", updateMatches);
 
-addSuggestedTaskButton.addEventListener("click", () => {
-  const group = getGroupById(Number(taskGroupSelect.value));
-  if (!group || !group.memberIds.length) {
-    return;
-  }
-
-  state.tasks.unshift({
-    id: state.counters.task++,
-    groupId: group.id,
-    title: suggestedTaskLibrary[group.intent],
-    assigneeId: group.memberIds[0],
-    done: false
-  });
-
-  group.lastActiveDays = 0;
-  addActivity(`Suggested execution task added to ${group.name}.`);
-  saveState();
-  renderApp();
-});
-
-availabilityRange.addEventListener("input", () => {
-  availabilityValue.textContent = `${availabilityRange.value} hrs/week`;
   updateMatches();
-});
+}
 
-matcherForm.addEventListener("submit", updateMatches);
-intentSelect.addEventListener("change", updateMatches);
-skillSelect.addEventListener("change", updateMatches);
-studentNameInput.addEventListener("input", updateMatches);
+function setupWaitlistEvents() {
+  if (!waitlistForm) {
+    return;
+  }
 
-waitlistForm.addEventListener("submit", (event) => {
-  event.preventDefault();
+  waitlistForm.addEventListener("submit", (event) => {
+    event.preventDefault();
 
-  const name = document.querySelector("#waitlist-name").value.trim();
-  const email = document.querySelector("#waitlist-email").value.trim();
-  const intent = document.querySelector("#waitlist-intent").value;
+    const name = document.querySelector("#waitlist-name")?.value.trim() || "";
+    const email = document.querySelector("#waitlist-email")?.value.trim() || "";
+    const intent = document.querySelector("#waitlist-intent")?.value || "";
 
-  const record = {
-    name,
-    email,
-    intent,
-    timestamp: new Date().toISOString()
-  };
+    if (!name || !email) {
+      setMessage(waitlistMessage, "Enter your name and college email to join the network.", "error");
+      return;
+    }
 
-  const existing = JSON.parse(localStorage.getItem(WAITLIST_KEY) || "[]");
-  existing.push(record);
-  localStorage.setItem(WAITLIST_KEY, JSON.stringify(existing));
+    if (!isInstitutionalEmail(email)) {
+      setMessage(waitlistMessage, "Use a college email ending like .edu, .ac.in, or .edu.in.", "error");
+      return;
+    }
 
-  waitlistMessage.textContent = `${name}, your network entry for "${intent}" has been saved in this browser.`;
-  waitlistForm.reset();
-});
+    const record = {
+      name,
+      email,
+      intent,
+      timestamp: new Date().toISOString()
+    };
 
-renderApp();
+    const existing = JSON.parse(localStorage.getItem(WAITLIST_KEY) || "[]");
+    if (existing.some((entry) => entry.email.toLowerCase() === email.toLowerCase())) {
+      setMessage(waitlistMessage, "This email is already saved in the browser join flow.", "error");
+      return;
+    }
+
+    existing.push(record);
+    localStorage.setItem(WAITLIST_KEY, JSON.stringify(existing));
+
+    setMessage(waitlistMessage, `${name}, your network entry for "${intent}" has been saved in this browser.`, "success");
+    waitlistForm.reset();
+  });
+}
+
+function setupSharedNav() {
+  if (navToggle) {
+    navToggle.addEventListener("click", () => {
+      updateNavState(!topbar.classList.contains("nav-open"));
+    });
+  }
+
+  document.querySelectorAll(".nav a, .nav-cta").forEach((link) => {
+    link.addEventListener("click", () => updateNavState(false));
+  });
+}
+
+setupSharedNav();
+setupMatchEvents();
+setupWorkspaceEvents();
+setupWaitlistEvents();
+renderWorkspaceApp();

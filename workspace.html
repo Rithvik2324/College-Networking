@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IntentLink Campus | Workspace</title>
+  <meta
+    name="description"
+    content="Use the IntentLink workspace to onboard students, create micro-communities, assign tasks, and manage activity."
+  >
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">IL</span>
+        <span>
+          <strong>IntentLink Campus</strong>
+          <small>College collaboration operating system</small>
+        </span>
+      </a>
+      <button
+        id="nav-toggle"
+        class="nav-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="site-nav"
+        aria-label="Open navigation"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div id="site-nav" class="nav-shell">
+        <nav class="nav">
+          <a href="index.html">Home</a>
+          <a href="features.html">Features</a>
+          <a href="match.html">Match</a>
+          <a href="workspace.html">Workspace</a>
+          <a href="rules.html">Rules</a>
+          <a href="launch.html">Launch</a>
+        </nav>
+        <a class="button button-primary nav-cta" href="launch.html#waitlist">Join Network</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel page-hero">
+        <p class="eyebrow">Workspace</p>
+        <h1 class="page-title">Turn the platform idea into real student actions.</h1>
+        <p class="hero-text page-copy">
+          This dedicated workspace page handles onboarding, group creation, task management, and execution tracking.
+        </p>
+      </section>
+
+      <section class="panel workspace-panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Live Platform Workspace</p>
+            <h2>Everything operational lives here.</h2>
+          </div>
+          <p class="section-note">
+            Students can join the network, manage intent, create or join micro-communities, assign work, and archive completed groups.
+          </p>
+        </div>
+
+        <div class="workspace-grid">
+          <article class="workspace-card">
+            <p class="card-label">Student Onboarding</p>
+            <form id="student-form" class="waitlist-form">
+              <label>
+                <span>Student Name</span>
+                <input id="new-student-name" type="text" placeholder="Enter student name" required>
+              </label>
+              <label>
+                <span>College Email</span>
+                <input id="new-student-email" type="email" placeholder="name@college.edu" required>
+              </label>
+              <label>
+                <span>Intent State</span>
+                <select id="new-student-intent" required>
+                  <option value="Hackathon-Ready">Hackathon-Ready</option>
+                  <option value="Project-Building">Project-Building</option>
+                  <option value="Startup Exploration">Startup Exploration</option>
+                  <option value="Learning-Only">Learning-Only</option>
+                </select>
+              </label>
+              <label>
+                <span>Primary Skill</span>
+                <select id="new-student-skill" required>
+                  <option value="Frontend">Frontend</option>
+                  <option value="Backend">Backend</option>
+                  <option value="AI/ML">AI/ML</option>
+                  <option value="UI/UX">UI/UX</option>
+                  <option value="Blockchain">Blockchain</option>
+                  <option value="Marketing">Marketing</option>
+                </select>
+              </label>
+              <label>
+                <span>Availability</span>
+                <input id="new-student-availability" type="number" min="2" max="30" value="8" required>
+              </label>
+              <button class="button button-primary" type="submit">Add Student</button>
+            </form>
+            <p id="student-form-message" class="workspace-message" aria-live="polite"></p>
+          </article>
+
+          <article class="workspace-card">
+            <p class="card-label">Create Micro-Community</p>
+            <form id="group-form" class="waitlist-form">
+              <label>
+                <span>Group Name</span>
+                <input id="group-title" type="text" placeholder="Example: Campus Build Sprint" required>
+              </label>
+              <label>
+                <span>Goal</span>
+                <input id="group-goal" type="text" placeholder="Hackathon project, startup validation, study sprint" required>
+              </label>
+              <label>
+                <span>Intent Type</span>
+                <select id="group-intent" required>
+                  <option value="Hackathon-Ready">Hackathon-Ready</option>
+                  <option value="Project-Building">Project-Building</option>
+                  <option value="Startup Exploration">Startup Exploration</option>
+                  <option value="Learning-Only">Learning-Only</option>
+                </select>
+              </label>
+              <label>
+                <span>Timeline</span>
+                <select id="group-timeline" required>
+                  <option value="3 Days">3 Days</option>
+                  <option value="1 Week">1 Week</option>
+                  <option value="2 Weeks">2 Weeks</option>
+                  <option value="1 Month">1 Month</option>
+                </select>
+              </label>
+              <label>
+                <span>Created By</span>
+                <select id="group-owner" required></select>
+              </label>
+              <button class="button button-primary" type="submit">Create Group</button>
+            </form>
+            <p id="group-form-message" class="workspace-message" aria-live="polite"></p>
+          </article>
+        </div>
+
+        <div class="workspace-grid workspace-grid-wide">
+          <article class="workspace-card">
+            <div class="workspace-head">
+              <div>
+                <p class="card-label">Student Network</p>
+                <h3>Verified campus members</h3>
+              </div>
+              <div class="toolbar">
+                <select id="directory-intent-filter">
+                  <option value="All">All intents</option>
+                  <option value="Hackathon-Ready">Hackathon-Ready</option>
+                  <option value="Project-Building">Project-Building</option>
+                  <option value="Startup Exploration">Startup Exploration</option>
+                  <option value="Learning-Only">Learning-Only</option>
+                </select>
+              </div>
+            </div>
+            <div id="student-directory" class="student-directory"></div>
+          </article>
+
+          <article class="workspace-card">
+            <div class="workspace-head">
+              <div>
+                <p class="card-label">Micro-Communities</p>
+                <h3>Active, completed, and archived groups</h3>
+              </div>
+              <button id="archive-inactive" class="button button-secondary" type="button">Archive Inactive Groups</button>
+            </div>
+            <div id="group-board" class="group-board"></div>
+          </article>
+        </div>
+
+        <div class="workspace-grid workspace-grid-wide">
+          <article class="workspace-card">
+            <div class="workspace-head">
+              <div>
+                <p class="card-label">Task Board</p>
+                <h3>Assign work and track execution</h3>
+              </div>
+              <div class="toolbar dual">
+                <select id="task-group-select"></select>
+                <button id="add-suggested-task" class="button button-secondary" type="button">Add Suggested Task</button>
+              </div>
+            </div>
+            <form id="task-form" class="task-form">
+              <input id="task-title" type="text" placeholder="Add a task for the selected group" required>
+              <select id="task-assignee"></select>
+              <button class="button button-primary" type="submit">Assign Task</button>
+            </form>
+            <p id="task-form-message" class="workspace-message" aria-live="polite"></p>
+            <div id="task-board" class="task-board"></div>
+          </article>
+
+          <article class="workspace-card">
+            <div class="workspace-head">
+              <div>
+                <p class="card-label">Governance + Metrics</p>
+                <h3>Execution quality without social noise</h3>
+              </div>
+            </div>
+            <div id="platform-metrics" class="metric-grid metric-grid-compact"></div>
+            <div id="activity-feed" class="activity-feed"></div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

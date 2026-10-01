@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IntentLink Campus | College Collaboration Platform</title>
+  <title>IntentLink Campus | Home</title>
   <meta
     name="description"
-    content="An intent-driven college collaboration platform for hackathons, projects, startups, and learning circles."
+    content="IntentLink Campus helps students find teammates, launch focused groups, manage work, and keep campus collaboration active."
   >
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -14,529 +14,133 @@
 <body>
   <div class="page-shell">
     <header class="topbar">
-      <a class="brand" href="#home">
+      <a class="brand" href="index.html">
         <span class="brand-mark">IL</span>
         <span>
           <strong>IntentLink Campus</strong>
           <small>College collaboration operating system</small>
         </span>
       </a>
-      <nav class="nav">
-        <a href="#home">Home</a>
-        <a href="#engine">Match</a>
-        <a href="#workspace">Workspace</a>
-        <a href="#network-rules">Rules</a>
-        <a href="#launch-system">Launch</a>
-      </nav>
-      <a class="button button-primary" href="#waitlist">Join Network</a>
+      <button
+        id="nav-toggle"
+        class="nav-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="site-nav"
+        aria-label="Open navigation"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div id="site-nav" class="nav-shell">
+        <nav class="nav">
+          <a href="index.html">Home</a>
+          <a href="features.html">Features</a>
+          <a href="match.html">Match</a>
+          <a href="workspace.html">Workspace</a>
+          <a href="rules.html">Rules</a>
+          <a href="launch.html">Launch</a>
+        </nav>
+        <a class="button button-primary nav-cta" href="launch.html#waitlist">Join Network</a>
+      </div>
     </header>
 
-    <main id="home">
+    <main>
       <section class="hero panel">
         <div class="hero-copy">
-          <p class="eyebrow">Live Student Platform</p>
-          <h1>Find the right teammates, form focused groups, and actually finish work.</h1>
+          <p class="eyebrow">Campus Collaboration Platform</p>
+          <h1>Keep the strong UI, but turn it into a real product website with real navigation.</h1>
           <p class="hero-text">
-            IntentLink Campus is built for students, not as a proposal page. Students join with a college email, set their current
-            intent, get matched with compatible peers, form time-bound groups, manage tasks, and archive inactive teams before they become noise.
+            IntentLink Campus now works as a multi-page experience. Instead of forcing everything into one long scroll,
+            students can open the exact part they need: discover the platform, try matching, manage the workspace,
+            review rules, or join the network.
           </p>
           <div class="hero-actions">
-            <a class="button button-primary" href="#workspace">Open Workspace</a>
-            <a class="button button-secondary" href="#engine">Find Matches</a>
+            <a class="button button-primary" href="workspace.html">Open Workspace</a>
+            <a class="button button-secondary" href="match.html">Try Matching</a>
           </div>
           <div class="hero-stats">
             <article>
-              <strong>70%+</strong>
-              <span>struggle to find teammates</span>
-            </article>
-            <article>
-              <strong>82%</strong>
-              <span>want a college-exclusive platform</span>
+              <strong>6</strong>
+              <span>focused pages instead of one long scroll</span>
             </article>
             <article>
               <strong>3-6</strong>
               <span>members per micro-community</span>
             </article>
+            <article>
+              <strong>Live</strong>
+              <span>browser-based interactive MVP sections</span>
+            </article>
           </div>
         </div>
         <div class="hero-board">
           <div class="glass-card spotlight-card">
-            <p class="card-label">How The Platform Works</p>
-            <div class="intent-pill intent-red">Hackathon-Ready</div>
-            <div class="intent-pill intent-blue">Project-Building</div>
-            <div class="intent-pill intent-green">Startup Exploration</div>
-            <div class="intent-pill intent-amber">Learning-Only</div>
+            <p class="card-label">Site Navigation</p>
+            <div class="intent-pill intent-red">Home</div>
+            <div class="intent-pill intent-blue">Features</div>
+            <div class="intent-pill intent-green">Workspace</div>
+            <div class="intent-pill intent-amber">Launch</div>
             <div class="mini-grid">
               <div>
+                <span>Discover</span>
+                <strong>Understand the platform</strong>
+              </div>
+              <div>
+                <span>Explore</span>
+                <strong>Open dedicated feature pages</strong>
+              </div>
+              <div>
+                <span>Use</span>
+                <strong>Run matching and workspace tools</strong>
+              </div>
+              <div>
                 <span>Join</span>
-                <strong>Verify with college email</strong>
-              </div>
-              <div>
-                <span>Match</span>
-                <strong>Intent + skill + time</strong>
-              </div>
-              <div>
-                <span>Build</span>
-                <strong>Create small active groups</strong>
-              </div>
-              <div>
-                <span>Finish</span>
-                <strong>Track tasks and archive clutter</strong>
+                <strong>Save your entry with a college email</strong>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="proposal" class="section-grid">
-        <article id="problem" class="panel">
-          <p class="eyebrow">01. Why Students Use It</p>
-          <h2>No more last-minute team formation or dead chat groups.</h2>
-          <p>
-            Students can discover reliable peers based on what they want to do right now. The platform is designed for hackathons,
-            campus projects, startup testing, and learning circles where speed, clarity, and accountability matter.
-          </p>
-          <div class="issue-list">
-            <span>Find teammates fast</span>
-            <span>Filter by current intent</span>
-            <span>Track ownership</span>
-            <span>Keep groups active</span>
-          </div>
-        </article>
-
-        <article class="panel">
-          <p class="eyebrow">02. Core Experience</p>
-          <h2>Everything students need to move from interest to execution.</h2>
-          <ul class="clean-list">
-            <li>Set an active intent state and update it anytime.</li>
-            <li>Get matched into small goal-driven groups.</li>
-            <li>Create tasks, assign owners, and mark progress.</li>
-            <li>Move communities from create to execute to complete.</li>
-          </ul>
-        </article>
-      </section>
-
-      <section class="section-grid architecture">
-        <article class="panel">
-          <p class="eyebrow">03. Student Profiles</p>
-          <h2>Profiles change with your current goal, not your old resume.</h2>
-          <p>
-            Students join as active builders. Each profile highlights present intent, primary skill, weekly availability, verified college identity,
-            and the groups they are currently part of.
-          </p>
-        </article>
-
-        <article class="panel">
-          <p class="eyebrow">04. Product Flow</p>
-          <div class="flow">
-            <div>
-              <strong>1. Join</strong>
-              <span>Students onboard with skill, intent, and availability</span>
-            </div>
-            <div>
-              <strong>2. Match</strong>
-              <span>The platform recommends teammates and communities</span>
-            </div>
-            <div>
-              <strong>3. Execute</strong>
-              <span>Groups assign tasks, track status, and keep momentum</span>
-            </div>
-            <div>
-              <strong>4. Clean Up</strong>
-              <span>Inactive groups are archived so the network stays useful</span>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <section id="engine" class="panel interactive-panel">
+      <section class="panel page-intro">
         <div class="section-head">
           <div>
-            <p class="eyebrow">05. Interactive Matching Engine</p>
-            <h2>Students choose what they want to do and get relevant teammates instantly.</h2>
+            <p class="eyebrow">Open What You Need</p>
+            <h2>The information and features now live on different pages.</h2>
           </div>
           <p class="section-note">
-            Matching is based on live browser data in this MVP using intent alignment, complementary skills, and availability overlap.
+            Click into each section instead of scrolling through everything on one screen.
           </p>
         </div>
-
-        <div class="match-layout">
-          <form id="matcher-form" class="matcher-form">
-            <label>
-              <span>Name</span>
-              <input id="student-name" type="text" value="You" maxlength="24">
-            </label>
-            <label>
-              <span>Current Intent</span>
-              <select id="intent-select">
-                <option value="Hackathon-Ready">Hackathon-Ready</option>
-                <option value="Project-Building">Project-Building</option>
-                <option value="Startup Exploration">Startup Exploration</option>
-                <option value="Learning-Only">Learning-Only</option>
-              </select>
-            </label>
-            <label>
-              <span>Primary Skill</span>
-              <select id="skill-select">
-                <option value="Frontend">Frontend</option>
-                <option value="Backend">Backend</option>
-                <option value="AI/ML">AI/ML</option>
-                <option value="UI/UX">UI/UX</option>
-                <option value="Blockchain">Blockchain</option>
-                <option value="Marketing">Marketing</option>
-              </select>
-            </label>
-            <label>
-              <span>Weekly Availability</span>
-              <input id="availability-range" type="range" min="2" max="20" step="1" value="10">
-              <strong id="availability-value">10 hrs/week</strong>
-            </label>
-            <button class="button button-primary" type="submit">Find My Team</button>
-          </form>
-
-          <div class="match-results">
-            <div class="result-card">
-              <p class="card-label">Recommended Micro-Community</p>
-              <h3 id="group-name">Sprint Lab Alpha</h3>
-              <p id="group-summary">
-                A focused 4-member hackathon team with complementary engineering and design skills.
-              </p>
-              <div id="compatibility-badge" class="badge">92% alignment</div>
-            </div>
-
-            <div>
-              <p class="card-label">Suggested Teammates</p>
-              <div id="teammate-list" class="teammate-list"></div>
-            </div>
-          </div>
+        <div class="feature-link-grid">
+          <a class="feature-link-card" href="features.html">
+            <p class="card-label">Platform Overview</p>
+            <h3>Features</h3>
+            <p>See the problem, core experience, profile model, and outcomes in one focused page.</p>
+          </a>
+          <a class="feature-link-card" href="match.html">
+            <p class="card-label">Interactive Tool</p>
+            <h3>Match Engine</h3>
+            <p>Choose intent, skill, and availability to get recommended teammates instantly.</p>
+          </a>
+          <a class="feature-link-card" href="workspace.html">
+            <p class="card-label">Interactive Tool</p>
+            <h3>Workspace</h3>
+            <p>Create students, build groups, assign tasks, manage activity, and track metrics.</p>
+          </a>
+          <a class="feature-link-card" href="rules.html">
+            <p class="card-label">Governance</p>
+            <h3>Rules</h3>
+            <p>Review lifecycle stages, network rules, and collaboration safeguards clearly.</p>
+          </a>
+          <a class="feature-link-card" href="launch.html">
+            <p class="card-label">Rollout + Join</p>
+            <h3>Launch</h3>
+            <p>See how the product rolls out on campus and join the network from its own page.</p>
+          </a>
         </div>
-      </section>
-
-      <section id="workspace" class="panel workspace-panel">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">06. Live Platform Workspace</p>
-            <h2>Turn the research model into real student actions.</h2>
-          </div>
-          <p class="section-note">
-            This browser-based MVP lets students join the network, manage intent, create or join micro-communities, assign work, and archive completed groups.
-          </p>
-        </div>
-
-        <div class="workspace-grid">
-          <article class="workspace-card">
-            <p class="card-label">Student Onboarding</p>
-            <form id="student-form" class="waitlist-form">
-              <label>
-                <span>Student Name</span>
-                <input id="new-student-name" type="text" placeholder="Enter student name" required>
-              </label>
-              <label>
-                <span>College Email</span>
-                <input id="new-student-email" type="email" placeholder="name@college.edu" required>
-              </label>
-              <label>
-                <span>Intent State</span>
-                <select id="new-student-intent" required>
-                  <option value="Hackathon-Ready">Hackathon-Ready</option>
-                  <option value="Project-Building">Project-Building</option>
-                  <option value="Startup Exploration">Startup Exploration</option>
-                  <option value="Learning-Only">Learning-Only</option>
-                </select>
-              </label>
-              <label>
-                <span>Primary Skill</span>
-                <select id="new-student-skill" required>
-                  <option value="Frontend">Frontend</option>
-                  <option value="Backend">Backend</option>
-                  <option value="AI/ML">AI/ML</option>
-                  <option value="UI/UX">UI/UX</option>
-                  <option value="Blockchain">Blockchain</option>
-                  <option value="Marketing">Marketing</option>
-                </select>
-              </label>
-              <label>
-                <span>Availability</span>
-                <input id="new-student-availability" type="number" min="2" max="30" value="8" required>
-              </label>
-              <button class="button button-primary" type="submit">Add Student</button>
-            </form>
-            <p id="student-form-message" class="workspace-message" aria-live="polite"></p>
-          </article>
-
-          <article class="workspace-card">
-            <p class="card-label">Create Micro-Community</p>
-            <form id="group-form" class="waitlist-form">
-              <label>
-                <span>Group Name</span>
-                <input id="group-title" type="text" placeholder="Example: Campus Build Sprint" required>
-              </label>
-              <label>
-                <span>Goal</span>
-                <input id="group-goal" type="text" placeholder="Hackathon project, startup validation, study sprint" required>
-              </label>
-              <label>
-                <span>Intent Type</span>
-                <select id="group-intent" required>
-                  <option value="Hackathon-Ready">Hackathon-Ready</option>
-                  <option value="Project-Building">Project-Building</option>
-                  <option value="Startup Exploration">Startup Exploration</option>
-                  <option value="Learning-Only">Learning-Only</option>
-                </select>
-              </label>
-              <label>
-                <span>Timeline</span>
-                <select id="group-timeline" required>
-                  <option value="3 Days">3 Days</option>
-                  <option value="1 Week">1 Week</option>
-                  <option value="2 Weeks">2 Weeks</option>
-                  <option value="1 Month">1 Month</option>
-                </select>
-              </label>
-              <label>
-                <span>Created By</span>
-                <select id="group-owner" required></select>
-              </label>
-              <button class="button button-primary" type="submit">Create Group</button>
-            </form>
-            <p id="group-form-message" class="workspace-message" aria-live="polite"></p>
-          </article>
-        </div>
-
-        <div class="workspace-grid workspace-grid-wide">
-          <article class="workspace-card">
-            <div class="workspace-head">
-              <div>
-                <p class="card-label">Student Network</p>
-                <h3>Verified campus members</h3>
-              </div>
-              <div class="toolbar">
-                <select id="directory-intent-filter">
-                  <option value="All">All intents</option>
-                  <option value="Hackathon-Ready">Hackathon-Ready</option>
-                  <option value="Project-Building">Project-Building</option>
-                  <option value="Startup Exploration">Startup Exploration</option>
-                  <option value="Learning-Only">Learning-Only</option>
-                </select>
-              </div>
-            </div>
-            <div id="student-directory" class="student-directory"></div>
-          </article>
-
-          <article class="workspace-card">
-            <div class="workspace-head">
-              <div>
-                <p class="card-label">Micro-Communities</p>
-                <h3>Active, completed, and archived groups</h3>
-              </div>
-              <button id="archive-inactive" class="button button-secondary" type="button">Archive Inactive Groups</button>
-            </div>
-            <div id="group-board" class="group-board"></div>
-          </article>
-        </div>
-
-        <div class="workspace-grid workspace-grid-wide">
-          <article class="workspace-card">
-            <div class="workspace-head">
-              <div>
-                <p class="card-label">Task Board</p>
-                <h3>Assign work and track execution</h3>
-              </div>
-              <div class="toolbar dual">
-                <select id="task-group-select"></select>
-                <button id="add-suggested-task" class="button button-secondary" type="button">Add Suggested Task</button>
-              </div>
-            </div>
-            <form id="task-form" class="task-form">
-              <input id="task-title" type="text" placeholder="Add a task for the selected group" required>
-              <select id="task-assignee"></select>
-              <button class="button button-primary" type="submit">Assign Task</button>
-            </form>
-            <div id="task-board" class="task-board"></div>
-          </article>
-
-          <article class="workspace-card">
-            <div class="workspace-head">
-              <div>
-                <p class="card-label">Governance + Metrics</p>
-                <h3>Execution quality without social noise</h3>
-              </div>
-            </div>
-            <div id="platform-metrics" class="metric-grid metric-grid-compact"></div>
-            <div id="activity-feed" class="activity-feed"></div>
-          </article>
-        </div>
-      </section>
-
-      <section id="network-rules" class="section-grid">
-        <article class="panel">
-          <p class="eyebrow">07. Group Lifecycle</p>
-          <h2>Every group has a clear path so it stays useful.</h2>
-          <div class="timeline">
-            <div class="timeline-step active">
-              <strong>Create</strong>
-              <span>Start a group around one goal and one timeline.</span>
-            </div>
-            <div class="timeline-step">
-              <strong>Execute</strong>
-              <span>Assign tasks, define checkpoints, and keep shipping.</span>
-            </div>
-            <div class="timeline-step">
-              <strong>Complete</strong>
-              <span>Close the sprint with outputs, notes, and outcomes.</span>
-            </div>
-            <div class="timeline-step">
-              <strong>Archive</strong>
-              <span>Inactive teams are closed before they become dead weight.</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="panel">
-          <p class="eyebrow">08. Network Rules</p>
-          <h2>The platform is built to reward execution, not popularity.</h2>
-          <ul class="clean-list">
-            <li>College email verification keeps the network campus-only.</li>
-            <li>No follower counts, likes, or vanity ranking systems.</li>
-            <li>No promotions or spam inside execution spaces.</li>
-            <li>Inactive groups are automatically archived.</li>
-          </ul>
-          <div class="governance-grid">
-            <span>Execution-first norms</span>
-            <span>Inactivity-based removal</span>
-            <span>Psychological safety</span>
-            <span>Low-noise environment</span>
-          </div>
-        </article>
-      </section>
-
-      <section id="case-study" class="section-grid">
-        <article class="panel">
-          <p class="eyebrow">09. Live Network Snapshot</p>
-          <h2>The platform is optimized for real campus collaboration patterns.</h2>
-          <p>
-            Active members can browse who is building, who is learning, and which groups are moving. The system favors smaller communities,
-            visible responsibilities, and clear timelines over big passive chat rooms.
-          </p>
-          <div class="metric-grid">
-            <div>
-              <strong>40</strong>
-              <span>pilot participants</span>
-            </div>
-            <div>
-              <strong>Faster</strong>
-              <span>team formation observed</span>
-            </div>
-            <div>
-              <strong>Higher</strong>
-              <span>participation and clarity</span>
-            </div>
-          </div>
-        </article>
-
-        <article id="survey" class="panel">
-          <p class="eyebrow">10. Platform Outcomes</p>
-          <h2>What students should get from using this system regularly.</h2>
-          <div class="survey-bars">
-            <div class="bar-row">
-              <span>Faster teammate discovery</span>
-              <div class="bar"><i style="width: 70%"></i></div>
-              <strong>Fast</strong>
-            </div>
-            <div class="bar-row">
-              <span>Stronger project follow-through</span>
-              <div class="bar"><i style="width: 82%"></i></div>
-              <strong>High</strong>
-            </div>
-            <div class="bar-row">
-              <span>Cleaner collaboration spaces</span>
-              <div class="bar"><i style="width: 65%"></i></div>
-              <strong>Better</strong>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <section id="launch-system" class="panel">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">11. Campus Launch System</p>
-            <h2>How this platform rolls out in real student ecosystems.</h2>
-          </div>
-        </div>
-        <div class="roadmap">
-          <article>
-            <span>Step 1</span>
-            <h3>Seed Early Builders</h3>
-            <p>Start with hackathon teams, project clubs, and startup-minded students who already need better coordination.</p>
-          </article>
-          <article>
-            <span>Step 2</span>
-            <h3>Run Small Cohorts</h3>
-            <p>Keep the first wave focused on small high-intent groups so the quality standard becomes visible quickly.</p>
-          </article>
-          <article>
-            <span>Step 3</span>
-            <h3>Expand Through Ambassadors</h3>
-            <p>Grow across years and departments using visible wins, campus ambassadors, and student-led trust.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="section-grid">
-        <article class="panel">
-          <p class="eyebrow">12. Student Benefits</p>
-          <h2>Students get speed, clarity, and better collaboration quality.</h2>
-          <ul class="clean-list">
-            <li>Less time searching for teammates and more time building.</li>
-            <li>Higher chance of finishing hackathons and campus projects.</li>
-            <li>Cross-year collaboration without relying on personal circles.</li>
-            <li>A cleaner way to discover serious collaborators.</li>
-          </ul>
-        </article>
-
-        <article class="panel">
-          <p class="eyebrow">13. Platform Safeguards</p>
-          <h2>The system actively protects collaboration quality as usage grows.</h2>
-          <ul class="clean-list">
-            <li>Gradual rollout keeps moderation manageable.</li>
-            <li>Automation handles inactive groups before clutter grows.</li>
-            <li>Intent switching helps students stay relevant over time.</li>
-            <li>Group-size limits prevent low-accountability chaos.</li>
-          </ul>
-        </article>
-      </section>
-
-      <section id="waitlist" class="panel cta-panel">
-        <div>
-          <p class="eyebrow">14. Join The Network</p>
-          <h2>Enter the network and start collaborating.</h2>
-          <p>
-            This section acts as a direct browser-based join flow. Students can register interest, choose an active intent, and save their entry
-            locally as part of the live front-end MVP.
-          </p>
-        </div>
-        <form id="waitlist-form" class="waitlist-form">
-          <label>
-            <span>Full Name</span>
-            <input id="waitlist-name" type="text" placeholder="Enter your name" required>
-          </label>
-          <label>
-            <span>College Email</span>
-            <input id="waitlist-email" type="email" placeholder="name@college.edu" required>
-          </label>
-          <label>
-            <span>Preferred Intent</span>
-            <select id="waitlist-intent" required>
-              <option value="Hackathon-Ready">Hackathon-Ready</option>
-              <option value="Project-Building">Project-Building</option>
-              <option value="Startup Exploration">Startup Exploration</option>
-              <option value="Learning-Only">Learning-Only</option>
-            </select>
-          </label>
-          <button class="button button-primary" type="submit">Join Now</button>
-        </form>
-        <p id="waitlist-message" class="waitlist-message" aria-live="polite"></p>
       </section>
     </main>
   </div>
