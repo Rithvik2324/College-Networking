@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
-import { prisma } from "./db";
-import { serializeUser, userProfileInclude } from "./users";
+import { getStore } from "./firestore-store";
+import { serializeUser } from "./users";
 
 function getSecret() {
   const configuredSecret = process.env.AUTH_SECRET;
@@ -44,10 +44,7 @@ export async function getCurrentUser() {
     return null;
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: userProfileInclude,
-  });
+  const user = await getStore().get("users", userId);
 
   return user ? serializeUser(user) : null;
 }

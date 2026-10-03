@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getStore } from "@/lib/firestore-store";
+import { communityView } from "@/lib/views";
 import { z } from "zod";
 
 const communitySchema = z.object({
@@ -18,23 +19,16 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const communities = await prisma.community.findMany({
-    where: {
-      OR: [
-        { isPrivate: false },
-        { members: { some: { userId: currentUser.id } } },
-      ],
-    },
-    include: {
-      owner: { select: { id: true, name: true, avatarUrl: true } },
-      members: {
-        include: {
-          user: { select: { id: true, name: true, avatarUrl: true, primarySkill: true } },
-        },
-      },
-    },
-    orderBy: { updatedAt: "desc" },
-  });
+  const store = getStore();
+  const memberships = await store.list("communityMembers", [["userId", "==", currentUser.id]]);
+  const visible = new Map((await store.list("communities", [["isPrivate", "==", false]])).map((community) => [community.id, community]));
+  for (const member of memberships) {
+    const community = await store.get("communities", member.communityId);
+    if (community) visible.set(community.id, community);
+  }
+  const communities = await Promise.all([...visible.values()]
+    .sort((first, second) => second.updatedAt.getTime() - first.updatedAt.getTime())
+    .map((community) => communityView(store, community)));
 
   return NextResponse.json({
     communities: communities.map((community) => ({
@@ -57,8 +51,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Enter a community name, a clear goal, and a valid intent." }, { status: 400 });
   }
 
-  const community = await prisma.community.create({
-    data: {
+  const store = getStore();
+  const created = await store.atomic(async (transaction) => {
+    const community = await transaction.create("communities", {
       name: parsed.data.name,
       goal: parsed.data.goal,
       description: parsed.data.description || "",
@@ -67,13 +62,11 @@ export async function POST(request: Request) {
       isPrivate: parsed.data.isPrivate || false,
       maxMembers: 6,
       ownerId: currentUser.id,
-      members: { create: { userId: currentUser.id, role: "owner" } },
-    },
-    include: {
-      owner: { select: { id: true, name: true, avatarUrl: true } },
-      members: { select: { userId: true } },
-    },
+    });
+    await transaction.create("communityMembers", { communityId: community.id, userId: currentUser.id, role: "owner" });
+    return community;
   });
+  const community = await communityView(store, created);
 
   return NextResponse.json({ community }, { status: 201 });
 }

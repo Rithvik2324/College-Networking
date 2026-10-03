@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getStore } from "@/lib/firestore-store";
+import { ensureDirectConversation } from "@/lib/conversations";
+import { userSummary, messageView } from "@/lib/views";
 import { createNotification } from "@/lib/notifications";
 import { z } from "zod";
 
@@ -12,19 +14,18 @@ const sendSchema = z.object({
 export async function GET() {
   const currentUser = await getCurrentUser();
   if (!currentUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const conversations = await prisma.conversation.findMany({
-    where: { kind: "direct", members: { some: { userId: currentUser.id } } },
-    include: {
-      community: { select: { id: true, name: true } },
-      members: { include: { user: { select: { id: true, name: true, avatarUrl: true } } } },
-      messages: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        include: { sender: { select: { id: true, name: true } } },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const store = getStore();
+  const memberships = await store.list("conversationMembers", [["userId", "==", currentUser.id]]);
+  const records = (await Promise.all(memberships.map((member) => store.get("conversations", member.conversationId))))
+    .filter((conversation): conversation is NonNullable<typeof conversation> => conversation !== null && conversation.kind === "direct")
+    .sort((first, second) => second.createdAt.getTime() - first.createdAt.getTime());
+  const conversations = await Promise.all(records.map(async (conversation) => {
+    const members = await Promise.all((await store.list("conversationMembers", [["conversationId", "==", conversation.id]]))
+      .map(async (member) => ({ ...member, user: await userSummary(store, member.userId) })));
+    const latest = (await store.list("messages", [["conversationId", "==", conversation.id]]))
+      .sort((first, second) => second.createdAt.getTime() - first.createdAt.getTime())[0];
+    return { ...conversation, community: null, members, messages: latest ? [await messageView(store, latest)] : [] };
+  }));
   return NextResponse.json({
     conversations: conversations.map((conversation) => ({
       ...conversation,
@@ -42,52 +43,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Choose a connected student and enter a message." }, { status: 400 });
   }
 
-  const recipient = await prisma.user.findUnique({ where: { id: parsed.data.recipientId } });
+  const store = getStore();
+  const recipient = await store.get("users", parsed.data.recipientId);
   if (!recipient) return NextResponse.json({ error: "Student not found." }, { status: 404 });
-  const [connection, sharedCommunity] = await Promise.all([
-    prisma.collaborationRequest.findFirst({
-      where: {
-        status: "accepted",
-        OR: [
-          { senderId: currentUser.id, receiverId: recipient.id },
-          { senderId: recipient.id, receiverId: currentUser.id },
-        ],
-      },
-    }),
-    prisma.communityMember.findFirst({
-      where: {
-        userId: currentUser.id,
-        community: { members: { some: { userId: recipient.id } } },
-      },
-    }),
-  ]);
+  const connections = [
+    ...await store.list("collaborationRequests", [["senderId", "==", currentUser.id], ["receiverId", "==", recipient.id], ["status", "==", "accepted"]]),
+    ...await store.list("collaborationRequests", [["senderId", "==", recipient.id], ["receiverId", "==", currentUser.id], ["status", "==", "accepted"]]),
+  ];
+  const ownTeams = await store.list("communityMembers", [["userId", "==", currentUser.id]]);
+  const recipientTeams = await store.list("communityMembers", [["userId", "==", recipient.id]]);
+  const connection = connections.length > 0;
+  const sharedCommunity = ownTeams.some((team) => recipientTeams.some((other) => other.communityId === team.communityId));
   if (!connection && !sharedCommunity) {
     return NextResponse.json({ error: "You can message students after connecting or joining the same team." }, { status: 403 });
   }
 
-  const result = await prisma.$transaction(async (transaction) => {
-    let conversation = await transaction.conversation.findFirst({
-      where: {
-        kind: "direct",
-        communityId: null,
-        members: { some: { userId: currentUser.id } },
-        AND: [{ members: { some: { userId: recipient.id } } }],
-      },
-      include: { members: true },
-    });
-    if (!conversation || conversation.members.length !== 2) {
-      conversation = await transaction.conversation.create({
-        data: {
-          kind: "direct",
-          members: { create: [{ userId: currentUser.id }, { userId: recipient.id }] },
-        },
-        include: { members: true },
-      });
-    }
-    const message = await transaction.message.create({
-      data: { conversationId: conversation.id, senderId: currentUser.id, body: parsed.data.message },
-      include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
-    });
+  const result = await store.atomic(async (transaction) => {
+    const conversation = await ensureDirectConversation(transaction, currentUser.id, recipient.id);
+    const created = await transaction.create("messages", { conversationId: conversation.id, senderId: currentUser.id, body: parsed.data.message });
+    const message = await messageView(transaction, created);
     await createNotification(transaction, {
       userId: recipient.id,
       type: "message",

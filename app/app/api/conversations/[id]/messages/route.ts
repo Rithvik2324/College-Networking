@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getStore } from "@/lib/firestore-store";
+import { conversationAccess } from "@/lib/conversations";
+import { messageView } from "@/lib/views";
 import { createNotification } from "@/lib/notifications";
 import { z } from "zod";
 
@@ -10,21 +12,15 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const currentUser = await getCurrentUser();
   if (!currentUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const conversationId = Number((await context.params).id);
-  const membership = await prisma.conversationMember.findUnique({
-    where: { conversationId_userId: { conversationId, userId: currentUser.id } },
-  });
+  if (!Number.isInteger(conversationId) || conversationId < 1) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
+  const store = getStore();
+  const membership = await conversationAccess(store, conversationId, currentUser.id);
   if (!membership) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
 
-  const messages = await prisma.message.findMany({
-    where: { conversationId },
-    include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
-    orderBy: { createdAt: "asc" },
-    take: 200,
-  });
-  await prisma.conversationMember.update({
-    where: { conversationId_userId: { conversationId, userId: currentUser.id } },
-    data: { lastReadAt: new Date() },
-  });
+  const records = (await store.list("messages", [["conversationId", "==", conversationId]]))
+    .sort((first, second) => first.createdAt.getTime() - second.createdAt.getTime()).slice(0, 200);
+  const messages = await Promise.all(records.map((message) => messageView(store, message)));
+  await store.update("conversationMembers", `${conversationId}_${currentUser.id}`, { lastReadAt: new Date() });
   return NextResponse.json({ messages });
 }
 
@@ -36,26 +32,25 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!Number.isInteger(conversationId) || conversationId < 1 || !parsed.success) {
     return NextResponse.json({ error: "Enter a valid message." }, { status: 400 });
   }
-  const conversationMember = await prisma.conversationMember.findUnique({
-    where: { conversationId_userId: { conversationId, userId: currentUser.id } },
-    include: { conversation: { include: { members: true } } },
-  });
+  const store = getStore();
+  const conversationMember = await conversationAccess(store, conversationId, currentUser.id);
   if (!conversationMember) return NextResponse.json({ error: "Conversation not found." }, { status: 404 });
 
-  const message = await prisma.message.create({
-    data: { conversationId, senderId: currentUser.id, body: parsed.data.message },
-    include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
-  });
-  const recipientIds = conversationMember.conversation.members
-    .map(({ userId }) => userId)
-    .filter((userId) => userId !== currentUser.id);
-  await Promise.all(recipientIds.map((userId) =>
-    createNotification(prisma, {
+  const message = await store.atomic(async (transaction) => {
+    if (!(await conversationAccess(transaction, conversationId, currentUser.id))) throw new Error("Conversation access changed.");
+    const created = await transaction.create("messages", { conversationId, senderId: currentUser.id, body: parsed.data.message });
+    const members = await transaction.list("conversationMembers", [["conversationId", "==", conversationId]]);
+    for (const { userId } of members) {
+      if (userId === currentUser.id) continue;
+      if (conversationMember.conversation.communityId && !(await transaction.get("communityMembers", `${conversationMember.conversation.communityId}_${userId}`))) continue;
+      await createNotification(transaction, {
         userId,
         type: "message",
         message: `New message from ${currentUser.name}.`,
         href: "/messages",
-    })
-  ));
+      });
+    }
+    return messageView(transaction, created);
+  });
   return NextResponse.json({ message }, { status: 201 });
 }

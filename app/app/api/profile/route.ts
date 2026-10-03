@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { serializeUser, userProfileInclude } from "@/lib/users";
+import { getStore } from "@/lib/firestore-store";
+import { serializeUser } from "@/lib/users";
 import { z } from "zod";
 
 const profileSchema = z.object({
@@ -55,56 +55,16 @@ export async function PUT(request: Request) {
   const { skills, interests, skill, completeOnboarding, ...profile } = parsed.data;
   const normalizedSkills = [...new Set([...(skills || []), ...(skill ? [skill] : [])])];
 
-  const user = await prisma.$transaction(async (transaction) => {
-    await transaction.user.update({
-      where: { id: currentUser.id },
-      data: {
-        ...profile,
-        ...(skill ? { primarySkill: skill } : {}),
-        ...(completeOnboarding ? { onboardingComplete: true } : {}),
-      },
+  const user = await getStore().atomic(async (store) => {
+    const existing = await store.get("users", currentUser.id);
+    if (!existing) throw new Error("Profile disappeared during update.");
+    const updatedUser = await store.update("users", currentUser.id, {
+      ...profile,
+      ...(skill ? { primarySkill: skill } : {}),
+      ...(completeOnboarding ? { onboardingComplete: true } : {}),
+      skills: skills !== undefined ? normalizedSkills : [...new Set([...existing.skills, ...normalizedSkills])],
+      ...(interests ? { interests: [...new Set(interests)] } : {}),
     });
-
-    if (skills !== undefined) {
-      await transaction.userSkill.deleteMany({ where: { userId: currentUser.id } });
-    }
-
-    for (const name of normalizedSkills) {
-      const savedSkill = await transaction.skill.upsert({
-        where: { name },
-        update: {},
-        create: { name },
-      });
-      if (skills !== undefined) {
-        await transaction.userSkill.create({ data: { userId: currentUser.id, skillId: savedSkill.id } });
-      } else {
-        await transaction.userSkill.upsert({
-          where: { userId_skillId: { userId: currentUser.id, skillId: savedSkill.id } },
-          update: {},
-          create: { userId: currentUser.id, skillId: savedSkill.id },
-        });
-      }
-    }
-
-    if (interests) {
-      await transaction.userInterest.deleteMany({ where: { userId: currentUser.id } });
-      for (const name of new Set(interests)) {
-        const savedInterest = await transaction.interest.upsert({
-          where: { name },
-          update: {},
-          create: { name },
-        });
-        await transaction.userInterest.create({
-          data: { userId: currentUser.id, interestId: savedInterest.id },
-        });
-      }
-    }
-
-    const updatedUser = await transaction.user.findUnique({
-      where: { id: currentUser.id },
-      include: userProfileInclude,
-    });
-    if (!updatedUser) throw new Error("Profile disappeared during update.");
     return serializeUser(updatedUser);
   });
 

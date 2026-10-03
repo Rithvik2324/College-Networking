@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getStore } from "@/lib/firestore-store";
+import { ensureCommunityConversation } from "@/lib/conversations";
+import { messageView } from "@/lib/views";
 import { z } from "zod";
 
 const messageSchema = z.object({
@@ -20,22 +22,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "A valid community is required." }, { status: 400 });
   }
 
-  const membership = await prisma.communityMember.findUnique({
-    where: { communityId_userId: { communityId, userId: currentUser.id } },
-  });
+  const store = getStore();
+  const membership = await store.get("communityMembers", `${communityId}_${currentUser.id}`);
   if (!membership) return NextResponse.json({ error: "Join this community to view its messages." }, { status: 403 });
 
-  const conversation = await prisma.conversation.findFirst({ where: { communityId, kind: "community" } });
+  const [conversation] = await store.list("conversations", [["communityId", "==", communityId], ["kind", "==", "community"]]);
   if (!conversation) return NextResponse.json({ messages: [] });
 
-  const messages = await prisma.message.findMany({
-    where: { conversationId: conversation.id },
-    include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
-    orderBy: { createdAt: "asc" },
-  });
-  await prisma.conversationMember.updateMany({
-    where: { conversationId: conversation.id, userId: currentUser.id },
-    data: { lastReadAt: new Date() },
+  const records = (await store.list("messages", [["conversationId", "==", conversation.id]]))
+    .sort((first, second) => first.createdAt.getTime() - second.createdAt.getTime());
+  const messages = await Promise.all(records.map((message) => messageView(store, message)));
+  await store.atomic(async (transaction) => {
+    const key = `${conversation.id}_${currentUser.id}`;
+    if (!(await transaction.get("conversationMembers", key))) {
+      await transaction.create("conversationMembers", { conversationId: conversation.id, userId: currentUser.id });
+    }
+    await transaction.update("conversationMembers", key, { lastReadAt: new Date() });
   });
   return NextResponse.json({ messages });
 }
@@ -51,31 +53,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Enter a message before sending." }, { status: 400 });
   }
 
-  const membership = await prisma.communityMember.findUnique({
-    where: { communityId_userId: { communityId: parsed.data.communityId, userId: currentUser.id } },
-  });
+  const store = getStore();
+  const membership = await store.get("communityMembers", `${parsed.data.communityId}_${currentUser.id}`);
   if (!membership) return NextResponse.json({ error: "Join this community to send messages." }, { status: 403 });
 
-  let conversation = await prisma.conversation.findFirst({
-    where: { communityId: parsed.data.communityId, kind: "community" },
-  });
-  if (!conversation) {
-    conversation = await prisma.conversation.create({
-      data: {
-        kind: "community",
-        communityId: parsed.data.communityId,
-        members: { create: { userId: currentUser.id } },
-      },
-    });
-  }
-
-  const message = await prisma.message.create({
-    data: {
+  const message = await store.atomic(async (transaction) => {
+    if (!(await transaction.get("communityMembers", `${parsed.data.communityId}_${currentUser.id}`))) throw new Error("Community access changed.");
+    const conversation = await ensureCommunityConversation(transaction, parsed.data.communityId);
+    const created = await transaction.create("messages", {
       conversationId: conversation.id,
       senderId: currentUser.id,
       body: parsed.data.text,
-    },
-    include: { sender: { select: { id: true, name: true, avatarUrl: true } } },
+    });
+    return messageView(transaction, created);
   });
 
   return NextResponse.json({ message }, { status: 201 });

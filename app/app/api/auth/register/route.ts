@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSessionToken } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { serializeUser, userProfileInclude } from "@/lib/users";
+import { getStore } from "@/lib/firestore-store";
+import { serializeUser } from "@/lib/users";
 import { hashPassword } from "@/lib/password";
 import { z } from "zod";
 
@@ -23,26 +23,18 @@ export async function POST(request: Request) {
   const passwordHash = await hashPassword(parsed.data.password);
   let newUser;
   try {
-    newUser = await prisma.user.create({
-      data: {
+    newUser = await getStore().atomic(async (store) => {
+      const existing = await store.list("users", [["email", "==", parsed.data.email]]);
+      if (existing.length) throw Object.assign(new Error("Email already registered."), { code: "P2002" });
+      return store.create("users", {
         name: parsed.data.name,
         email: parsed.data.email,
         passwordHash,
         college: "",
         department: "",
         onboardingComplete: false,
-        skills: {
-          create: {
-            skill: {
-              connectOrCreate: {
-                where: { name: "Frontend" },
-                create: { name: "Frontend" },
-              },
-            },
-          },
-        },
-      },
-      include: userProfileInclude,
+        skills: ["Frontend"],
+      });
     });
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "P2002") {

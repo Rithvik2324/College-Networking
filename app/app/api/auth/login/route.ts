@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSessionToken, getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { serializeUser, userProfileInclude } from "@/lib/users";
+import { getStore } from "@/lib/firestore-store";
+import { serializeUser } from "@/lib/users";
 import { comparePassword } from "@/lib/password";
 import { z } from "zod";
 
@@ -17,10 +17,7 @@ export async function POST(request: Request) {
   }
 
   const email = parsed.data.email.trim().toLowerCase();
-  const user = await prisma.user.findUnique({
-    where: { email },
-    include: userProfileInclude,
-  });
+  const [user] = await getStore().list("users", [["email", "==", email]]);
 
   if (!user) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });

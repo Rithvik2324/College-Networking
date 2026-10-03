@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getStore } from "@/lib/firestore-store";
+import { projectView } from "@/lib/views";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -16,22 +17,15 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const id = Number((await context.params).id);
   if (!Number.isInteger(id) || id < 1) return NextResponse.json({ error: "Project not found." }, { status: 404 });
 
-  const project = await prisma.project.findUnique({
-    where: { id },
-    include: {
-      owner: { select: { id: true, name: true, avatarUrl: true } },
-      members: { include: { user: { select: { id: true, name: true, avatarUrl: true, primarySkill: true } } } },
-      requiredSkills: { include: { skill: true } },
-      tasks: { orderBy: { dueAt: "asc" } },
-      joinRequests: {
-        where: { applicantId: currentUser.id },
-        select: { id: true, status: true },
-      },
-    },
-  });
-  if (!project || (project.visibility !== "public" && !project.members.some(({ userId }) => userId === currentUser.id))) {
+  const store = getStore();
+  const record = await store.get("projects", id);
+  if (!record || (record.visibility !== "public" && !(await store.get("projectMembers", `${id}_${currentUser.id}`)))) {
     return NextResponse.json({ error: "Project not found." }, { status: 404 });
   }
+  const project = { ...await projectView(store, record, true),
+    joinRequests: (await store.list("projectJoinRequests", [["projectId", "==", id], ["applicantId", "==", currentUser.id]]))
+      .map(({ id, status }) => ({ id, status })),
+  };
   return NextResponse.json({ project });
 }
 
@@ -44,10 +38,10 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     return NextResponse.json({ error: "Check the project updates and try again." }, { status: 400 });
   }
 
-  const project = await prisma.project.findUnique({ where: { id } });
+  const project = await getStore().get("projects", id);
   if (!project) return NextResponse.json({ error: "Project not found." }, { status: 404 });
   if (project.ownerId !== currentUser.id) return NextResponse.json({ error: "Only the project owner can edit it." }, { status: 403 });
 
-  const updated = await prisma.project.update({ where: { id }, data: parsed.data });
+  const updated = await getStore().update("projects", id, parsed.data);
   return NextResponse.json({ project: updated });
 }

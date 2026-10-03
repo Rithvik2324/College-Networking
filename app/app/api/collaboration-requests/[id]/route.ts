@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getStore } from "@/lib/firestore-store";
+import { userSummary } from "@/lib/views";
+import { ensureDirectConversation } from "@/lib/conversations";
 import { createNotification } from "@/lib/notifications";
 import { z } from "zod";
 
@@ -17,7 +19,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     return NextResponse.json({ error: "Invalid collaboration request update." }, { status: 400 });
   }
 
-  const collaborationRequest = await prisma.collaborationRequest.findUnique({ where: { id } });
+  const collaborationRequest = await getStore().get("collaborationRequests", id);
   if (!collaborationRequest) return NextResponse.json({ error: "Request not found." }, { status: 404 });
   if (collaborationRequest.receiverId !== currentUser.id) {
     return NextResponse.json({ error: "Only the invited student can respond." }, { status: 403 });
@@ -26,12 +28,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     return NextResponse.json({ error: "This request has already been answered." }, { status: 409 });
   }
 
-  const updated = await prisma.$transaction(async (transaction) => {
-    const result = await transaction.collaborationRequest.update({
-      where: { id },
-      data: { status: parsed.data.status },
-      include: { sender: { select: { id: true, name: true } } },
-    });
+  const outcome = await getStore().atomic(async (transaction) => {
+    const latest = await transaction.get("collaborationRequests", id);
+    if (!latest || latest.status !== "pending") return { error: "This request has already been answered." };
+    const result = await transaction.update("collaborationRequests", id, { status: parsed.data.status });
     await createNotification(transaction, {
         userId: collaborationRequest.senderId,
         type: `collaboration-${parsed.data.status}`,
@@ -40,32 +40,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     });
 
     if (parsed.data.status === "accepted") {
-      let conversation = await transaction.conversation.findFirst({
-        where: {
-          kind: "direct",
-          communityId: null,
-          members: { some: { userId: collaborationRequest.senderId } },
-          AND: [{ members: { some: { userId: collaborationRequest.receiverId } } }],
-        },
-        include: { members: true },
-      });
-      if (!conversation || conversation.members.length !== 2) {
-        conversation = await transaction.conversation.create({
-          data: {
-            kind: "direct",
-            members: {
-              create: [
-                { userId: collaborationRequest.senderId },
-                { userId: collaborationRequest.receiverId },
-              ],
-            },
-          },
-          include: { members: true },
-        });
-      }
+      await ensureDirectConversation(transaction, collaborationRequest.senderId, collaborationRequest.receiverId);
     }
-    return result;
+    return { request: { ...result, sender: await userSummary(transaction, result.senderId) } };
   });
-
-  return NextResponse.json({ request: updated });
+  if ("error" in outcome) return NextResponse.json({ error: outcome.error }, { status: 409 });
+  return NextResponse.json({ request: outcome.request });
 }

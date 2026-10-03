@@ -17,6 +17,11 @@ build/
 **/.env.*
 !**/.env.example
 
+# Firebase Admin credentials
+**/*firebase-adminsdk*.json
+**/*service-account*.json
+**/.backups/
+
 # Local databases
 *.db
 *.db-journal

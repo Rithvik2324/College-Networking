@@ -12,12 +12,16 @@ From PowerShell:
 Set-Location .\app
 npm install
 Copy-Item .env.example .env
-npm run db:migrate
-npm run db:seed
+```
+
+Configure Firebase Admin credentials following [`app/README.md`](app/README.md), then run:
+
+```powershell
+npm run firebase:check
 npm run dev
 ```
 
-Open http://localhost:3000. For local development, the example SQLite URL uses `app/prisma/dev.db`. Keep `.env` and the database file out of version control. Replace the `AUTH_SECRET` placeholder with a random secret before deploying.
+Open http://localhost:3000. All active app data is stored in Cloud Firestore in `intentlink`; the original SQLite database is retained only for recovery/import. Do not overwrite existing environment files. Keep credentials and database backups out of version control. Replace the `AUTH_SECRET` placeholder with a random secret before deploying. The existing Firestore project is already migrated; do not reinitialize or reseed it.
 
 Demo accounts: `aarav@college.edu` / `demo123`, `saanvi@college.edu` / `demo123`, and `admin@college.edu` / `admin123`.
 
@@ -31,4 +35,4 @@ Demo accounts: `aarav@college.edu` / `demo123`, `saanvi@college.edu` / `demo123`
 
 ## Verification And Limits
 
-See [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) for current test results and unfinished work. The local relational database is SQLite; deployment requires durable storage for the SQLite file on a single-instance host or a planned migration to managed PostgreSQL. Email verification, password reset, hosted image upload, realtime sockets, production deployment configuration, and automated test coverage remain incomplete. Direct messages use persisted polling rather than realtime delivery.
+See [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) for current test results and unfinished work. Firestore is the active database, with server-only Security Rules and the app's existing bcrypt/JWT login. Isolated Firestore transaction tests and HTTP workflow checks are available. Email verification, password reset, hosted image upload, realtime sockets, and production deployment configuration remain incomplete. Direct messages use persisted polling rather than realtime delivery.

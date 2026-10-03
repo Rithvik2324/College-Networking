@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getStore } from "@/lib/firestore-store";
 import { comparePassword, hashPassword } from "@/lib/password";
 import { z } from "zod";
 
@@ -13,11 +13,8 @@ const settingsSchema = z.object({
 export async function GET() {
   const currentUser = await getCurrentUser();
   if (!currentUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const user = await prisma.user.findUnique({
-    where: { id: currentUser.id },
-    select: { email: true, notificationsEnabled: true, college: true },
-  });
-  return NextResponse.json({ settings: user });
+  const user = await getStore().get("users", currentUser.id);
+  return NextResponse.json({ settings: user ? { email: user.email, notificationsEnabled: user.notificationsEnabled, college: user.college } : null });
 }
 
 export async function PUT(request: Request) {
@@ -30,18 +27,15 @@ export async function PUT(request: Request) {
   if (newPassword && !currentPassword) {
     return NextResponse.json({ error: "Enter your current password to change it." }, { status: 400 });
   }
-  const user = await prisma.user.findUnique({ where: { id: currentUser.id } });
+  const user = await getStore().get("users", currentUser.id);
   if (!user) return NextResponse.json({ error: "Account not found." }, { status: 404 });
   if (newPassword && !(await comparePassword(currentPassword || "", user.passwordHash))) {
     return NextResponse.json({ error: "Your current password is incorrect." }, { status: 400 });
   }
 
-  await prisma.user.update({
-    where: { id: currentUser.id },
-    data: {
+  await getStore().update("users", currentUser.id, {
       ...(notificationsEnabled !== undefined ? { notificationsEnabled } : {}),
       ...(newPassword ? { passwordHash: await hashPassword(newPassword) } : {}),
-    },
   });
   return NextResponse.json({ ok: true });
 }

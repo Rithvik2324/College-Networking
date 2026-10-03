@@ -1,15 +1,6 @@
-import type { Prisma } from "@prisma/client";
+import type { UserRecord } from "./firestore-store";
 
-export const userProfileInclude = {
-  skills: { include: { skill: true } },
-  interests: { include: { interest: true } },
-} satisfies Prisma.UserInclude;
-
-export type UserWithProfile = Prisma.UserGetPayload<{
-  include: typeof userProfileInclude;
-}>;
-
-export function serializeUser(user: UserWithProfile) {
+export function serializeUser(user: UserRecord) {
   return {
     id: user.id,
     name: user.name,
@@ -21,8 +12,8 @@ export function serializeUser(user: UserWithProfile) {
     avatarUrl: user.avatarUrl,
     intent: user.intent,
     skill: user.primarySkill,
-    skills: user.skills.map(({ skill }) => skill.name),
-    interests: user.interests.map(({ interest }) => interest.name),
+    skills: user.skills,
+    interests: user.interests,
     availability: user.availability,
     bio: user.bio,
     onboardingComplete: user.onboardingComplete,

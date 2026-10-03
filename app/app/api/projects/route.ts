@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getStore } from "@/lib/firestore-store";
+import { projectView } from "@/lib/views";
 import { z } from "zod";
 
 const projectSchema = z.object({
@@ -17,21 +18,12 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q")?.trim().slice(0, 80);
   const category = searchParams.get("category")?.trim().slice(0, 60);
-  const projects = await prisma.project.findMany({
-    where: {
-      visibility: "public",
-      ...(category ? { category } : {}),
-      ...(query ? { OR: [{ title: { contains: query } }, { description: { contains: query } }] } : {}),
-    },
-    include: {
-      owner: { select: { id: true, name: true, avatarUrl: true } },
-      members: { include: { user: { select: { id: true, name: true, avatarUrl: true } } } },
-      requiredSkills: { include: { skill: true } },
-      _count: { select: { joinRequests: true } },
-    },
-    orderBy: { updatedAt: "desc" },
-    take: 60,
-  });
+  const store = getStore();
+  const records = (await store.list("projects", [["visibility", "==", "public"]]))
+    .filter((project) => (!category || project.category === category) &&
+      (!query || `${project.title}\n${project.description}`.toLowerCase().includes(query.toLowerCase())))
+    .sort((first, second) => second.updatedAt.getTime() - first.updatedAt.getTime()).slice(0, 60);
+  const projects = await Promise.all(records.map((project) => projectView(store, project)));
   return NextResponse.json({ projects });
 }
 
@@ -42,24 +34,18 @@ export async function POST(request: Request) {
   const parsed = projectSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Complete each required project field." }, { status: 400 });
 
-  const project = await prisma.project.create({
-    data: {
+  const store = getStore();
+  const created = await store.atomic(async (transaction) => {
+    const project = await transaction.create("projects", {
       ownerId: currentUser.id,
       title: parsed.data.title,
       description: parsed.data.description,
       category: parsed.data.category,
-      members: { create: { userId: currentUser.id, role: "owner" } },
-      requiredSkills: {
-        create: [...new Set(parsed.data.skills)].map((name) => ({
-          skill: { connectOrCreate: { where: { name }, create: { name } } },
-        })),
-      },
-    },
-    include: {
-      owner: { select: { id: true, name: true, avatarUrl: true } },
-      members: { include: { user: { select: { id: true, name: true, avatarUrl: true } } } },
-      requiredSkills: { include: { skill: true } },
-    },
+      requiredSkills: [...new Set(parsed.data.skills)],
+    });
+    await transaction.create("projectMembers", { projectId: project.id, userId: currentUser.id, role: "owner" });
+    return project;
   });
+  const project = await projectView(store, created);
   return NextResponse.json({ project }, { status: 201 });
 }
