@@ -28,11 +28,15 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
+      if (!data) {
+        setError("The sign-in service returned an invalid response. Check that the server is running and configured.");
+        return;
+      }
       if (!response.ok) { setError(data.error || "Login failed."); return; }
       router.push(data.user.onboardingComplete ? "/workspace" : "/onboarding");
     } catch {
-      setError("Could not connect to the sign-in service. Try again.");
+      setError("Could not reach the sign-in service. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }

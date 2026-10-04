@@ -16,29 +16,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Enter a valid email and password." }, { status: 400 });
   }
 
-  const email = parsed.data.email.trim().toLowerCase();
-  const [user] = await getStore().list("users", [["email", "==", email]]);
+  try {
+    const email = parsed.data.email.trim().toLowerCase();
+    const [user] = await getStore().list("users", [["email", "==", email]]);
 
-  if (!user) {
-    return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+    if (!user || !(await comparePassword(parsed.data.password, user.passwordHash))) {
+      return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+    }
+
+    const token = await createSessionToken(user.id);
+    const response = NextResponse.json({ user: serializeUser(user) });
+    response.cookies.set("intentlink_session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return response;
+  } catch (error) {
+    console.error("Login service failed:", error);
+    return NextResponse.json(
+      { error: "Sign-in service is unavailable. Check the server's Firestore credentials and connection." },
+      { status: 503 },
+    );
   }
-
-  const valid = await comparePassword(parsed.data.password, user.passwordHash);
-  if (!valid) {
-    return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
-  }
-
-  const token = await createSessionToken(user.id);
-  const response = NextResponse.json({ user: serializeUser(user) });
-  response.cookies.set("intentlink_session", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
-
-  return response;
 }
 
 export async function GET() {

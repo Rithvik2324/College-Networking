@@ -56,6 +56,8 @@ Keep the archived Prisma schema and migrations for source recovery. Do not commi
 
 All active APIs use Firestore with no SQLite fallback. `data/store.json`, the original SQLite database, and `.backups` are offline recovery/import sources only. Configure the same Firestore project and a stable `AUTH_SECRET` on every server instance. No email service, image-storage provider, or realtime push service is configured.
 
+For Vercel or another non-Google deployment, configure `FIREBASE_PROJECT_ID`, `AUTH_SECRET`, and `FIREBASE_SERVICE_ACCOUNT_JSON` in the deployment environment. Set `FIREBASE_SERVICE_ACCOUNT_JSON` to the full service-account JSON contents as a server-only secret. `GOOGLE_APPLICATION_CREDENTIALS` is appropriate only when its absolute file path exists on the running server; a path on your development computer will not work after deployment. Never expose service-account credentials as `NEXT_PUBLIC_*`. Firebase web config alone cannot authorize the server API. See Firestore Setup below for IAM and project requirements.
+
 ## Firestore Setup
 
 1. In Firebase Console, select `intentlink`, then **Build > Firestore Database**. Create the default database if necessary. Use production mode, not public test-mode rules.
