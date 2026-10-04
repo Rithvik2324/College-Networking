@@ -5,24 +5,26 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { SiteShell } from "../components/site-shell";
+import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
+import { getFirebaseAuth } from "@/lib/firebase/client";
+import { getFirebaseProfile } from "@/lib/firebase/profile";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("aarav@college.edu");
-  const [password, setPassword] = useState("demo123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
-    fetch("/api/auth/session")
-      .then((res) => res.json())
-      .then((data) => {
-        if (active && data.user) router.replace("/workspace");
-      })
-      .catch(() => undefined);
-    return () => { active = false; };
+    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), async (user) => {
+      if (!active || !user) return;
+      const profile = await getFirebaseProfile(user.uid).catch(() => null);
+      if (active) router.replace(profile?.onboardingComplete ? "/workspace" : "/onboarding");
+    });
+    return () => { active = false; unsubscribe(); };
   }, [router]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -30,19 +32,11 @@ export default function LoginPage() {
     setError("");
     setSubmitting(true);
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        setError(data.error || "Login failed.");
-        return;
-      }
-      router.push(data.user.onboardingComplete ? "/workspace" : "/onboarding");
+      const credential = await signInWithEmailAndPassword(getFirebaseAuth(), email.trim().toLowerCase(), password);
+      const profile = await getFirebaseProfile(credential.user.uid);
+      router.push(profile?.onboardingComplete ? "/workspace" : "/onboarding");
     } catch {
-      setError("Could not connect to the sign-in service. Try again.");
+      setError("Could not sign in. Check your email and password, and confirm Firebase Authentication is enabled.");
     } finally {
       setSubmitting(false);
     }
@@ -53,7 +47,7 @@ export default function LoginPage() {
       <section className="panel page-hero">
         <p className="eyebrow">Access portal</p>
         <h1>Login to your college collaboration workspace.</h1>
-        <p className="page-copy">Use the demo credentials to access the platform locally.</p>
+        <p className="page-copy">Sign in with your IntentLink account.</p>
       </section>
 
       <section className="section-card">

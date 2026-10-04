@@ -18,6 +18,8 @@ import {
   X,
   CheckSquare,
 } from "lucide-react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { getFirebaseAuth } from "@/lib/firebase/client";
 
 const publicItems = [
   { href: "/", label: "Home" },
@@ -41,7 +43,7 @@ const workspaceItems = [
 
 const appPaths = ["/workspace", "/discover", "/students", "/teams", "/communities", "/projects", "/tasks", "/messages", "/notifications", "/invitations", "/profile", "/settings"];
 
-type SessionUser = { id: number; name: string; avatarUrl?: string | null };
+type SessionUser = { id: string; name: string; avatarUrl?: string | null };
 
 export function SiteShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -52,15 +54,15 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
   const isAppView = appPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
   useEffect(() => {
-    fetch("/api/auth/session")
-      .then((response) => response.json())
-      .then((data) => setUser(data.user || null))
-      .catch(() => setUser(null));
+    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), (firebaseUser) => {
+      setUser(firebaseUser ? { id: firebaseUser.uid, name: firebaseUser.displayName || firebaseUser.email || "Student", avatarUrl: firebaseUser.photoURL } : null);
+    });
+    return unsubscribe;
   }, [pathname]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    await fetch("/api/auth/logout", { method: "POST" });
+    await signOut(getFirebaseAuth());
     setUser(null);
     router.replace("/");
     router.refresh();

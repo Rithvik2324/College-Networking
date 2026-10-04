@@ -18,24 +18,13 @@ const publicRoutes = [
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const hasSession = Boolean(request.cookies.get("intentlink_session")?.value);
   const isPublic = publicRoutes.some((route) =>
     route === "/" ? pathname === "/" : pathname === route || pathname.startsWith(`${route}/`)
   );
 
   if (isPublic) {
-    if (hasSession && ["/login", "/register"].includes(pathname)) {
-      return NextResponse.redirect(new URL("/workspace", request.url));
-    }
     return NextResponse.next();
   }
-
-  if (!hasSession) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
   return NextResponse.next();
 }
 

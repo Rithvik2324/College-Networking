@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { getMatchingRecommendations } from "@/lib/matching";
+import { getMatchingRecommendations } from "@/public/matching";
 import { prisma } from "@/lib/db";
 import { userProfileInclude } from "@/lib/users";
 import { z } from "zod";
