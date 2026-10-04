@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
-import { userProfileInclude } from "@/lib/users";
+import { getStore } from "@/lib/firestore-store";
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const currentUser = await getCurrentUser();
@@ -11,17 +10,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const id = Number(rawId);
   if (!Number.isInteger(id) || id < 1) return NextResponse.json({ error: "Student not found." }, { status: 404 });
 
-  const student = await prisma.user.findUnique({
-    where: { id, onboardingComplete: true },
-    include: {
-      ...userProfileInclude,
-      ownedProjects: { select: { id: true, title: true, category: true, status: true } },
-      communityMemberships: {
-        include: { community: { select: { id: true, name: true, intent: true, isPrivate: true } } },
-      },
-    },
-  });
-  if (!student) return NextResponse.json({ error: "Student not found." }, { status: 404 });
+  const store = getStore();
+  const student = await store.get("users", id);
+  if (!student?.onboardingComplete) return NextResponse.json({ error: "Student not found." }, { status: 404 });
+  const projects = await store.list("projects", [["ownerId", "==", id]]);
+  const memberships = await store.list("communityMembers", [["userId", "==", id]]);
+  const communities = await Promise.all(memberships.map((member) => store.get("communities", member.communityId)));
 
   return NextResponse.json({
     student: {
@@ -33,15 +27,13 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       avatarUrl: student.avatarUrl,
       intent: student.intent,
       skill: student.primarySkill,
-      skills: student.skills.map(({ skill }) => skill.name),
-      interests: student.interests.map(({ interest }) => interest.name),
+      skills: student.skills,
+      interests: student.interests,
       availability: student.availability,
       bio: student.bio,
-      projects: student.ownedProjects,
-      communities: student.communityMemberships
-        .map(({ community }) => community)
-        .filter((community) => !community.isPrivate)
-        .map(({ id, name, intent }) => ({ id, name, intent })),
+      projects: projects.map(({ id, title, category, status }) => ({ id, title, category, status })),
+      communities: communities.flatMap((community) => community && !community.isPrivate
+        ? [{ id: community.id, name: community.name, intent: community.intent }] : []),
     },
   });
 }

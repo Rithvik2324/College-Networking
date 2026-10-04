@@ -1,15 +1,10 @@
-import type { Prisma, PrismaClient } from "@prisma/client";
-
-type NotificationDatabase = PrismaClient | Prisma.TransactionClient;
+import type { FirestoreStore, Records } from "./firestore-store";
 
 export async function createNotification(
-  database: NotificationDatabase,
-  data: Prisma.NotificationUncheckedCreateInput
+  database: FirestoreStore,
+  data: Pick<Records["notifications"], "userId" | "type" | "message" | "href">
 ) {
-  const recipient = await database.user.findUnique({
-    where: { id: data.userId },
-    select: { notificationsEnabled: true },
-  });
+  const recipient = await database.get("users", data.userId);
   if (!recipient?.notificationsEnabled) return null;
-  return database.notification.create({ data });
+  return database.create("notifications", data);
 }

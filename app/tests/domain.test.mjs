@@ -55,8 +55,8 @@ test("public user serialization never exposes a password hash", () => {
     notificationsEnabled: true,
     createdAt: new Date("2026-10-01T00:00:00.000Z"),
     updatedAt: new Date("2026-10-01T00:00:00.000Z"),
-    skills: [{ skill: { name: "Backend" } }],
-    interests: [{ interest: { name: "Climate" } }],
+    skills: ["Backend"],
+    interests: ["Climate"],
   };
 
   const safeUser = serializeUser(user);

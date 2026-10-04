@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getStore } from "@/lib/firestore-store";
+import { userSummary } from "@/lib/views";
 import { createNotification } from "@/lib/notifications";
 import { z } from "zod";
 
@@ -13,14 +14,14 @@ export async function GET() {
   const currentUser = await getCurrentUser();
   if (!currentUser) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const requests = await prisma.collaborationRequest.findMany({
-    where: { OR: [{ senderId: currentUser.id }, { receiverId: currentUser.id }] },
-    include: {
-      sender: { select: { id: true, name: true, avatarUrl: true, department: true } },
-      receiver: { select: { id: true, name: true, avatarUrl: true, department: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  const store = getStore();
+  const records = [
+    ...await store.list("collaborationRequests", [["senderId", "==", currentUser.id]]),
+    ...await store.list("collaborationRequests", [["receiverId", "==", currentUser.id]]),
+  ].sort((first, second) => second.createdAt.getTime() - first.createdAt.getTime());
+  const requests = await Promise.all(records.map(async (item) => ({ ...item,
+    sender: await userSummary(store, item.senderId), receiver: await userSummary(store, item.receiverId),
+  })));
   return NextResponse.json({ requests });
 }
 
@@ -33,27 +34,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Choose another student to connect with." }, { status: 400 });
   }
 
-  const receiver = await prisma.user.findUnique({ where: { id: parsed.data.receiverId, onboardingComplete: true } });
-  if (!receiver) return NextResponse.json({ error: "Student not found." }, { status: 404 });
+  const receiver = await getStore().get("users", parsed.data.receiverId);
+  if (!receiver?.onboardingComplete) return NextResponse.json({ error: "Student not found." }, { status: 404 });
 
-  const existing = await prisma.collaborationRequest.findFirst({
-    where: {
-      OR: [
-        { senderId: currentUser.id, receiverId: receiver.id },
-        { senderId: receiver.id, receiverId: currentUser.id },
-      ],
-      status: { in: ["pending", "accepted"] },
-    },
-  });
-  if (existing) return NextResponse.json({ error: "A request or connection already exists." }, { status: 409 });
-
-  const collaborationRequest = await prisma.$transaction(async (transaction) => {
-    const created = await transaction.collaborationRequest.create({
-      data: {
+  const result = await getStore().atomic(async (transaction) => {
+    const existing = [
+      ...await transaction.list("collaborationRequests", [["senderId", "==", currentUser.id], ["receiverId", "==", receiver.id]]),
+      ...await transaction.list("collaborationRequests", [["senderId", "==", receiver.id], ["receiverId", "==", currentUser.id]]),
+    ].some((item) => ["pending", "accepted"].includes(item.status));
+    if (existing) return { error: "A request or connection already exists." };
+    const created = await transaction.create("collaborationRequests", {
         senderId: currentUser.id,
         receiverId: receiver.id,
         message: parsed.data.message || "",
-      },
     });
     await createNotification(transaction, {
         userId: receiver.id,
@@ -61,8 +54,8 @@ export async function POST(request: Request) {
         message: `${currentUser.name} would like to collaborate with you.`,
         href: "/discover?tab=requests",
     });
-    return created;
+    return { request: created };
   });
-
-  return NextResponse.json({ request: collaborationRequest }, { status: 201 });
+  if ("error" in result) return NextResponse.json({ error: result.error }, { status: 409 });
+  return NextResponse.json({ request: result.request }, { status: 201 });
 }

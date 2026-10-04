@@ -18,8 +18,6 @@ import {
   X,
   CheckSquare,
 } from "lucide-react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { getFirebaseAuth } from "@/lib/firebase/client";
 
 const publicItems = [
   { href: "/", label: "Home" },
@@ -54,15 +52,12 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
   const isAppView = appPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), (firebaseUser) => {
-      setUser(firebaseUser ? { id: firebaseUser.uid, name: firebaseUser.displayName || firebaseUser.email || "Student", avatarUrl: firebaseUser.photoURL } : null);
-    });
-    return unsubscribe;
+    fetch("/api/auth/session").then((response) => response.json()).then((data) => setUser(data.user || null)).catch(() => setUser(null));
   }, [pathname]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    await signOut(getFirebaseAuth());
+    await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
     router.replace("/");
     router.refresh();

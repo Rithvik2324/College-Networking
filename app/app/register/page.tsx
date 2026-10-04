@@ -5,9 +5,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { SiteShell } from "../components/site-shell";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { getFirebaseAuth } from "@/lib/firebase/client";
-import { createFirebaseProfile } from "@/lib/firebase/profile";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -27,13 +24,12 @@ export default function RegisterPage() {
         setError("Use your .edu or .ac.in college email address.");
         return;
       }
-      const credential = await createUserWithEmailAndPassword(getFirebaseAuth(), email.trim().toLowerCase(), password);
-      await updateProfile(credential.user, { displayName: name.trim() });
-      await createFirebaseProfile(credential.user, name);
+      const response = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password }) });
+      const data = await response.json();
+      if (!response.ok) { setError(data.error || "Registration failed."); return; }
       router.push("/onboarding");
-    } catch (cause) {
-      const code = cause && typeof cause === "object" && "code" in cause ? String(cause.code) : "";
-      setError(code === "auth/email-already-in-use" ? "This email is already registered." : code === "auth/weak-password" ? "Choose a stronger password." : "Could not create your account. Check your Firebase setup and try again.");
+    } catch {
+      setError("Could not connect to the registration service. Try again.");
     } finally {
       setSubmitting(false);
     }

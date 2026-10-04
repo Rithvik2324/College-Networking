@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { getMatchingRecommendations } from "@/public/matching";
-import { prisma } from "@/lib/db";
-import { userProfileInclude } from "@/lib/users";
+import { getMatchingRecommendations } from "@/lib/matching";
+import { getStore } from "@/lib/firestore-store";
 import { z } from "zod";
 
 const intentSchema = z.enum([
@@ -19,18 +18,14 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const current = await prisma.user.findUnique({
-    where: { id: currentUser.id },
-    include: userProfileInclude,
-  });
+  const store = getStore();
+  const current = await store.get("users", currentUser.id);
   if (!current) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const peers = await prisma.user.findMany({
-    where: { id: { not: current.id }, onboardingComplete: true },
-    include: userProfileInclude,
-  });
+  const peers = (await store.list("users", [["onboardingComplete", "==", true]]))
+    .filter((peer) => peer.id !== current.id);
 
   const recommendations = getMatchingRecommendations(
     {
@@ -39,7 +34,7 @@ export async function GET() {
       intent: intentSchema.catch("Project-Building").parse(current.intent),
       skill: skillSchema.catch("Frontend").parse(current.primarySkill),
       availability: current.availability,
-      interests: current.interests.map(({ interest }) => interest.name),
+      interests: current.interests,
     },
     peers.map((user) => ({
       id: user.id,
@@ -47,7 +42,7 @@ export async function GET() {
       intent: intentSchema.catch("Project-Building").parse(user.intent),
       skill: skillSchema.catch("Frontend").parse(user.primarySkill),
       availability: user.availability,
-      interests: user.interests.map(({ interest }) => interest.name),
+      interests: user.interests,
     }))
   );
 

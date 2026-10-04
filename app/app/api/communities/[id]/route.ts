@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getStore } from "@/lib/firestore-store";
+import { communityView } from "@/lib/views";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -16,21 +17,12 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const id = Number((await context.params).id);
   if (!Number.isInteger(id) || id < 1) return NextResponse.json({ error: "Community not found." }, { status: 404 });
 
-  const community = await prisma.community.findUnique({
-    where: { id },
-    include: {
-      owner: { select: { id: true, name: true, avatarUrl: true } },
-      members: {
-        include: { user: { select: { id: true, name: true, avatarUrl: true, primarySkill: true, department: true } } },
-        orderBy: { joinedAt: "asc" },
-      },
-      tasks: { orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }] },
-      invitations: { where: { status: "pending" }, select: { inviteeId: true } },
-    },
-  });
-  if (!community || (community.isPrivate && !community.members.some(({ userId }) => userId === currentUser.id))) {
+  const store = getStore();
+  const record = await store.get("communities", id);
+  if (!record || (record.isPrivate && !(await store.get("communityMembers", `${id}_${currentUser.id}`)))) {
     return NextResponse.json({ error: "Community not found." }, { status: 404 });
   }
+  const community = await communityView(store, record, true);
   return NextResponse.json({ community });
 }
 
@@ -42,10 +34,10 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   if (!Number.isInteger(id) || id < 1 || !parsed.success) {
     return NextResponse.json({ error: "Check the community details and try again." }, { status: 400 });
   }
-  const community = await prisma.community.findUnique({ where: { id } });
+  const community = await getStore().get("communities", id);
   if (!community) return NextResponse.json({ error: "Community not found." }, { status: 404 });
   if (community.ownerId !== currentUser.id) return NextResponse.json({ error: "Only the owner can update this community." }, { status: 403 });
 
-  const updated = await prisma.community.update({ where: { id }, data: parsed.data });
+  const updated = await getStore().update("communities", id, parsed.data);
   return NextResponse.json({ community: updated });
 }
