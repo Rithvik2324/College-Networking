@@ -20,6 +20,13 @@ export async function POST(request: Request) {
     );
   }
 
+  if (process.env.NODE_ENV === "production" && !process.env.AUTH_SECRET?.trim()) {
+    return NextResponse.json(
+      { error: "AUTH_SECRET is missing from Vercel's Production environment variables." },
+      { status: 503 },
+    );
+  }
+
   try {
     const passwordHash = await hashPassword(parsed.data.password);
     const newUser = await getStore().atomic(async (store) => {

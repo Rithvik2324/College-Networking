@@ -181,8 +181,9 @@ async function getDatabase() {
     const client = globalMongo.intentLinkMongoClient ?? new MongoClient(uri, { serverSelectionTimeoutMS: 10000 });
     globalMongo.intentLinkMongoClient = client;
     globalMongo.intentLinkMongoDatabase = client.connect().then(async (connected) => {
-      const dbName = new URL(uri).pathname.slice(1).split("/")[0] || "college_platform";
-      const database = connected.db(decodeURIComponent(dbName));
+      const uriPath = uri.match(/^[^:]+:\/\/[^/]+\/([^?]*)/)?.[1];
+      const dbName = uriPath ? decodeURIComponent(uriPath.split("/")[0]) : "college_platform";
+      const database = connected.db(dbName);
       await Promise.all([
         database.collection("users").createIndex({ email: 1 }, { unique: true, name: "users_email_unique" }),
         database.collection("communityInvitations").createIndex({ inviteeId: 1, status: 1 }),
@@ -202,6 +203,11 @@ async function getDatabase() {
     });
   }
   return globalMongo.intentLinkMongoDatabase;
+}
+
+export async function checkDatabaseConnection() {
+  const database = await getDatabase();
+  await database.command({ ping: 1 });
 }
 
 export function getStore() {
