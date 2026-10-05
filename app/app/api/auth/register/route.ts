@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     const publicError = authenticationRejected
       ? "MongoDB Atlas rejected the database login. Check the database user and password in MONGODB_URI."
       : /MongoServerSelectionError|MongoNetworkError|ECONN|ENOTFOUND|timeout/i.test(`${errorName} ${errorCode}`)
-      ? "The database is temporarily unavailable. Check the MongoDB Atlas connection and try again."
+      ? "Vercel cannot reach MongoDB Atlas. Check Atlas Network Access and the Production MONGODB_URI."
       : "Registration could not be completed. Check the database configuration and server logs.";
     return NextResponse.json(
       { error: publicError },
