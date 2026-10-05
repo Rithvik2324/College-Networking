@@ -50,9 +50,22 @@ export async function POST(request: Request) {
     if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
       return NextResponse.json({ error: "This email is already registered." }, { status: 409 });
     }
-    console.error("Registration service failed:", error);
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error("Registration service failed:", detail);
+    let publicError = "Registration service is unavailable. Check the Vercel function logs for the Firestore error.";
+    if (detail.includes("Firestore is not ready")) {
+      publicError = "Firestore is connected, but this database has not been initialized. Run the one-time Firestore migration for this project.";
+    } else if (detail.includes("FIREBASE_SERVICE_ACCOUNT_JSON")) {
+      publicError = "The server Firebase service-account setting is missing or invalid. Check FIREBASE_SERVICE_ACCOUNT_JSON in Vercel.";
+    } else if (/credential|private key|service account|default credentials|Could not load the default/i.test(detail)) {
+      publicError = "The server Firebase credentials are missing or invalid. Configure FIREBASE_SERVICE_ACCOUNT_JSON in Vercel.";
+    } else if (/PERMISSION_DENIED|permission denied|insufficient permissions|Missing or insufficient permissions/i.test(detail)) {
+      publicError = "The Firebase service account lacks access to Cloud Firestore. Grant it the Cloud Datastore User role in Google Cloud IAM.";
+    } else if (/NOT_FOUND|NOT_FOUND|database.*not found/i.test(detail)) {
+      publicError = "Cloud Firestore is not enabled for the Firebase project configured on the server.";
+    }
     return NextResponse.json(
-      { error: "Registration service is unavailable. Check the server's Firestore credentials, database readiness, and connection." },
+      { error: publicError },
       { status: 503 },
     );
   }
