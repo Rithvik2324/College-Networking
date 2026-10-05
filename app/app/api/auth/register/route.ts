@@ -62,7 +62,9 @@ export async function POST(request: Request) {
     const errorMessage = error instanceof Error ? error.message : "";
     console.error("Registration service failed:", errorName, errorCode);
     const authenticationRejected = /bad auth|authentication failed/i.test(errorMessage) || ["18", "8000"].includes(errorCode);
-    const publicError = authenticationRejected
+    const publicError = errorName === "MongoParseError"
+      ? "The MongoDB URI in Vercel is malformed. Enter only the raw mongodb+srv URI, without quotes, and URL-encode special characters in the password."
+      : authenticationRejected
       ? "MongoDB Atlas rejected the database login. Check the database user and password in MONGODB_URI."
       : /MongoServerSelectionError|MongoNetworkError|ECONN|ENOTFOUND|timeout/i.test(`${errorName} ${errorCode}`)
       ? "Vercel cannot reach MongoDB Atlas. Check Atlas Network Access and the Production MONGODB_URI."
