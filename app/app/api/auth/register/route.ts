@@ -52,8 +52,12 @@ export async function POST(request: Request) {
     }
     const errorName = error instanceof Error ? error.name : "UnknownError";
     const errorCode = error && typeof error === "object" && "code" in error ? String(error.code) : "";
+    const errorMessage = error instanceof Error ? error.message : "";
     console.error("Registration service failed:", errorName, errorCode);
-    const publicError = /Mongo|ECONN|ENOTFOUND|timeout/i.test(`${errorName} ${errorCode}`)
+    const authenticationRejected = /bad auth|authentication failed/i.test(errorMessage) || ["18", "8000"].includes(errorCode);
+    const publicError = authenticationRejected
+      ? "MongoDB Atlas rejected the database login. Check the database user and password in MONGODB_URI."
+      : /MongoServerSelectionError|MongoNetworkError|ECONN|ENOTFOUND|timeout/i.test(`${errorName} ${errorCode}`)
       ? "The database is temporarily unavailable. Check the MongoDB Atlas connection and try again."
       : "Registration could not be completed. Check the database configuration and server logs.";
     return NextResponse.json(
