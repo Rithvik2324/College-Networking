@@ -20,10 +20,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const passwordHash = await hashPassword(parsed.data.password);
-  let newUser;
   try {
-    newUser = await getStore().atomic(async (store) => {
+    const passwordHash = await hashPassword(parsed.data.password);
+    const newUser = await getStore().atomic(async (store) => {
       const existing = await store.list("users", [["email", "==", parsed.data.email]]);
       if (existing.length) throw Object.assign(new Error("Email already registered."), { code: "P2002" });
       return store.create("users", {
@@ -36,24 +35,27 @@ export async function POST(request: Request) {
         skills: ["Frontend"],
       });
     });
+
+    const token = await createSessionToken(newUser.id);
+    const response = NextResponse.json({ user: serializeUser(newUser) }, { status: 201 });
+    response.cookies.set("intentlink_session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    return response;
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
       return NextResponse.json({ error: "This email is already registered." }, { status: 409 });
     }
-    throw error;
+    console.error("Registration service failed:", error);
+    return NextResponse.json(
+      { error: "Registration service is unavailable. Check the server's Firestore credentials, database readiness, and connection." },
+      { status: 503 },
+    );
   }
-
-  const token = await createSessionToken(newUser.id);
-  const response = NextResponse.json({ user: serializeUser(newUser) }, { status: 201 });
-  response.cookies.set("intentlink_session", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
-
-  return response;
 }
 
 export async function GET() {

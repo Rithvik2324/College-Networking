@@ -25,11 +25,11 @@ export default function RegisterPage() {
         return;
       }
       const response = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password }) });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) { setError(data.error || "Registration failed."); return; }
       router.push("/onboarding");
     } catch {
-      setError("Could not connect to the registration service. Try again.");
+      setError("Could not reach the app server. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
