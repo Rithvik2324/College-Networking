@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
-import { getStore } from "./firestore-store";
+import { getStore } from "./database-store";
 import { serializeUser } from "./users";
 
 function getSecret() {

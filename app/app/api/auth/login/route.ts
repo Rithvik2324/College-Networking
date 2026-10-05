@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSessionToken, getCurrentUser } from "@/lib/auth";
-import { getStore } from "@/lib/firestore-store";
+import { getStore } from "@/lib/database-store";
 import { serializeUser } from "@/lib/users";
 import { comparePassword } from "@/lib/password";
 import { z } from "zod";
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Login service failed:", error);
     return NextResponse.json(
-      { error: "Sign-in service is unavailable. Check the server's Firestore credentials and connection." },
+      { error: "Sign-in service is unavailable. Check the database connection and try again." },
       { status: 503 },
     );
   }

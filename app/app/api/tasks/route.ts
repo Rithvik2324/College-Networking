@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { getStore, type Records } from "@/lib/firestore-store";
+import { getStore, type Records } from "@/lib/database-store";
 import { taskView } from "@/lib/views";
 import { createNotification } from "@/lib/notifications";
 import { z } from "zod";

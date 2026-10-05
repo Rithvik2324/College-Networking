@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { getStore } from "@/lib/firestore-store";
+import { getStore } from "@/lib/database-store";
 import { createNotification } from "@/lib/notifications";
 
 export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {

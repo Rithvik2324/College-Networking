@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { getStore } from "@/lib/firestore-store";
+import { getStore } from "@/lib/database-store";
 
 export async function GET(request: Request) {
   const currentUser = await getCurrentUser();

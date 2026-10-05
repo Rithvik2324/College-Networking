@@ -1,7 +1,7 @@
-import type { FirestoreStore, Records } from "./firestore-store";
+import type { DatabaseStore, Records } from "./database-store";
 
 export async function createNotification(
-  database: FirestoreStore,
+  database: DatabaseStore,
   data: Pick<Records["notifications"], "userId" | "type" | "message" | "href">
 ) {
   const recipient = await database.get("users", data.userId);

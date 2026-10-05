@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { getStore } from "@/lib/firestore-store";
+import { getStore } from "@/lib/database-store";
 import { comparePassword, hashPassword } from "@/lib/password";
 import { z } from "zod";
 

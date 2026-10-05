@@ -11,17 +11,16 @@ From PowerShell:
 ```powershell
 Set-Location .\app
 npm install
-Copy-Item .env.example .env
 ```
 
-Configure Firebase Admin credentials following [`app/README.md`](app/README.md), then run:
+Create a MongoDB Atlas database user and allow your local IP in Atlas Network Access. Add `MONGODB_URI` and `AUTH_SECRET` to `app/.env.local` as described in [`app/README.md`](app/README.md). Then run:
 
 ```powershell
-npm run firebase:check
+npm run db:check
 npm run dev
 ```
 
-Open http://localhost:3000. All active app data is stored in Cloud Firestore in `intentlink`; the original SQLite database is retained only for recovery/import. Do not overwrite existing environment files. Keep credentials and database backups out of version control. Replace the `AUTH_SECRET` placeholder with a random secret before deploying. The existing Firestore project is already migrated; do not reinitialize or reseed it.
+Open http://localhost:3000. App data is stored in MongoDB Atlas through the MongoDB Node.js driver. Keep the connection string out of version control. Existing Firebase or Supabase data is not imported automatically.
 
 Demo accounts: `aarav@college.edu` / `demo123`, `saanvi@college.edu` / `demo123`, and `admin@college.edu` / `admin123`.
 
@@ -35,4 +34,4 @@ Demo accounts: `aarav@college.edu` / `demo123`, `saanvi@college.edu` / `demo123`
 
 ## Verification And Limits
 
-See [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) for current test results and unfinished work. Firestore is the active database, with server-only Security Rules and the app's existing bcrypt/JWT login. Isolated Firestore transaction tests and HTTP workflow checks are available. Email verification, password reset, hosted image upload, realtime sockets, and production deployment configuration remain incomplete. Direct messages use persisted polling rather than realtime delivery.
+See [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) for implementation notes. MongoDB Atlas is the active database target. Email verification, password reset, hosted image upload, realtime sockets, and production deployment configuration remain incomplete. Direct messages use persisted polling rather than realtime delivery.

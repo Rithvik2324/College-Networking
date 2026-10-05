@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getMatchingRecommendations } from "@/lib/matching";
-import { getStore } from "@/lib/firestore-store";
+import { getStore } from "@/lib/database-store";
 import { z } from "zod";
 
 const intentSchema = z.enum([

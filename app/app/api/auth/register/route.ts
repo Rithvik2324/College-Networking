@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSessionToken } from "@/lib/auth";
-import { getStore } from "@/lib/firestore-store";
+import { getStore } from "@/lib/database-store";
 import { serializeUser } from "@/lib/users";
 import { hashPassword } from "@/lib/password";
 import { z } from "zod";
@@ -47,23 +47,15 @@ export async function POST(request: Request) {
     });
     return response;
   } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+    if (error && typeof error === "object" && "code" in error && (error.code === "P2002" || error.code === 11000)) {
       return NextResponse.json({ error: "This email is already registered." }, { status: 409 });
     }
-    const detail = error instanceof Error ? error.message : String(error);
-    console.error("Registration service failed:", detail);
-    let publicError = "Registration service is unavailable. Check the Vercel function logs for the Firestore error.";
-    if (detail.includes("Firestore is not ready")) {
-      publicError = "Firestore is connected, but this database has not been initialized. Run the one-time Firestore migration for this project.";
-    } else if (detail.includes("FIREBASE_SERVICE_ACCOUNT_JSON")) {
-      publicError = "The server Firebase service-account setting is missing or invalid. Check FIREBASE_SERVICE_ACCOUNT_JSON in Vercel.";
-    } else if (/credential|private key|service account|default credentials|Could not load the default/i.test(detail)) {
-      publicError = "The server Firebase credentials are missing or invalid. Configure FIREBASE_SERVICE_ACCOUNT_JSON in Vercel.";
-    } else if (/PERMISSION_DENIED|permission denied|insufficient permissions|Missing or insufficient permissions/i.test(detail)) {
-      publicError = "The Firebase service account lacks access to Cloud Firestore. Grant it the Cloud Datastore User role in Google Cloud IAM.";
-    } else if (/NOT_FOUND|NOT_FOUND|database.*not found/i.test(detail)) {
-      publicError = "Cloud Firestore is not enabled for the Firebase project configured on the server.";
-    }
+    const errorName = error instanceof Error ? error.name : "UnknownError";
+    const errorCode = error && typeof error === "object" && "code" in error ? String(error.code) : "";
+    console.error("Registration service failed:", errorName, errorCode);
+    const publicError = /Mongo|ECONN|ENOTFOUND|timeout/i.test(`${errorName} ${errorCode}`)
+      ? "The database is temporarily unavailable. Check the MongoDB Atlas connection and try again."
+      : "Registration could not be completed. Check the database configuration and server logs.";
     return NextResponse.json(
       { error: publicError },
       { status: 503 },

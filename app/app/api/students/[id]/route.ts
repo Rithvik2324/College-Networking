@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { getStore } from "@/lib/firestore-store";
+import { getStore } from "@/lib/database-store";
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const currentUser = await getCurrentUser();

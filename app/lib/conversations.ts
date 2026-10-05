@@ -1,6 +1,6 @@
-import type { FirestoreStore } from "./firestore-store";
+import type { DatabaseStore } from "./database-store";
 
-export async function ensureDirectConversation(store: FirestoreStore, firstId: number, secondId: number) {
+export async function ensureDirectConversation(store: DatabaseStore, firstId: number, secondId: number) {
   const memberships = await store.list("conversationMembers", [["userId", "==", firstId]]);
   for (const membership of memberships) {
     const conversation = await store.get("conversations", membership.conversationId);
@@ -14,7 +14,7 @@ export async function ensureDirectConversation(store: FirestoreStore, firstId: n
   return conversation;
 }
 
-export async function ensureCommunityConversation(store: FirestoreStore, communityId: number) {
+export async function ensureCommunityConversation(store: DatabaseStore, communityId: number) {
   const [existing] = await store.list("conversations", [["communityId", "==", communityId], ["kind", "==", "community"]]);
   const conversation = existing ?? await store.create("conversations", { kind: "community", communityId });
   const members = await store.list("communityMembers", [["communityId", "==", communityId]]);
@@ -26,7 +26,7 @@ export async function ensureCommunityConversation(store: FirestoreStore, communi
   return conversation;
 }
 
-export async function conversationAccess(store: FirestoreStore, conversationId: number, userId: number) {
+export async function conversationAccess(store: DatabaseStore, conversationId: number, userId: number) {
   const membership = await store.get("conversationMembers", `${conversationId}_${userId}`);
   if (!membership) return null;
   const conversation = await store.get("conversations", conversationId);

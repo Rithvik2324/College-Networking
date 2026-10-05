@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { getStore } from "@/lib/firestore-store";
+import { getStore } from "@/lib/database-store";
 import { userSummary } from "@/lib/views";
 import { ensureDirectConversation } from "@/lib/conversations";
 import { createNotification } from "@/lib/notifications";

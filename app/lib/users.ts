@@ -1,4 +1,4 @@
-import type { UserRecord } from "./firestore-store";
+import type { UserRecord } from "./database-store";
 
 export function serializeUser(user: UserRecord) {
   return {
