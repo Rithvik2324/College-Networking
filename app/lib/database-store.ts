@@ -182,19 +182,17 @@ async function getDatabase() {
       throw new Error("MONGODB_URI is not configured.");
     }
 
-    // Clean accidental quotes/whitespace from the Vercel environment variable.
-    const uri = rawUri
-      .trim()
-      .replace(/^["']|["']$/g, "");
+    const uri = rawUri.trim().replace(/^["']|["']$/g, "");
 
-    // Make sure the application is receiving a MongoDB URI.
-    if (!uri.startsWith("mongodb+srv://") && !uri.startsWith("mongodb://")) {
+    if (
+      !uri.startsWith("mongodb+srv://") &&
+      !uri.startsWith("mongodb://")
+    ) {
       throw new Error(
         "MONGODB_URI must start with mongodb+srv:// or mongodb://"
       );
     }
 
-    // Use an explicit database name when one is not included in the URI.
     const uriPath = uri.match(/^[^:]+:\/\/[^/]+\/([^?]*)/)?.[1];
 
     const dbName =
@@ -281,4 +279,13 @@ async function getDatabase() {
   }
 
   return globalMongo.intentLinkMongoDatabase;
+}
+
+export async function checkDatabaseConnection() {
+  const database = await getDatabase();
+  await database.command({ ping: 1 });
+}
+
+export function getStore() {
+  return DatabaseStore.create(getDatabase());
 }
