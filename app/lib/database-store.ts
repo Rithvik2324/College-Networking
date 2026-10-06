@@ -176,40 +176,109 @@ const globalMongo = globalThis as typeof globalThis & { intentLinkMongoClient?: 
 
 async function getDatabase() {
   if (!globalMongo.intentLinkMongoDatabase) {
-    const uri = process.env.MONGODB_URI;
-    if (!uri) throw new Error("MONGODB_URI is not configured.");
-    const client = globalMongo.intentLinkMongoClient ?? new MongoClient(uri, { serverSelectionTimeoutMS: 10000 });
+    const rawUri = process.env.MONGODB_URI;
+
+    if (!rawUri) {
+      throw new Error("MONGODB_URI is not configured.");
+    }
+
+    // Clean accidental quotes/whitespace from the Vercel environment variable.
+    const uri = rawUri
+      .trim()
+      .replace(/^["']|["']$/g, "");
+
+    // Make sure the application is receiving a MongoDB URI.
+    if (!uri.startsWith("mongodb+srv://") && !uri.startsWith("mongodb://")) {
+      throw new Error(
+        "MONGODB_URI must start with mongodb+srv:// or mongodb://"
+      );
+    }
+
+    // Use an explicit database name when one is not included in the URI.
+    const uriPath = uri.match(/^[^:]+:\/\/[^/]+\/([^?]*)/)?.[1];
+
+    const dbName =
+      uriPath && uriPath.trim()
+        ? decodeURIComponent(uriPath.split("/")[0])
+        : "college_platform";
+
+    const client =
+      globalMongo.intentLinkMongoClient ??
+      new MongoClient(uri, {
+        serverSelectionTimeoutMS: 10000,
+      });
+
     globalMongo.intentLinkMongoClient = client;
-    globalMongo.intentLinkMongoDatabase = client.connect().then(async (connected) => {
-      const uriPath = uri.match(/^[^:]+:\/\/[^/]+\/([^?]*)/)?.[1];
-      const dbName = uriPath ? decodeURIComponent(uriPath.split("/")[0]) : "college_platform";
-      const database = connected.db(dbName);
-      await Promise.all([
-        database.collection("users").createIndex({ email: 1 }, { unique: true, name: "users_email_unique" }),
-        database.collection("communityInvitations").createIndex({ inviteeId: 1, status: 1 }),
-        database.collection("collaborationRequests").createIndex({ senderId: 1, status: 1 }),
-        database.collection("collaborationRequests").createIndex({ receiverId: 1, status: 1 }),
-        database.collection("projectJoinRequests").createIndex({ projectId: 1, status: 1 }),
-        database.collection("projectJoinRequests").createIndex({ applicantId: 1, status: 1 }),
-        database.collection("tasks").createIndex({ communityId: 1, status: 1 }),
-        database.collection("tasks").createIndex({ projectId: 1, status: 1 }),
-        database.collection("messages").createIndex({ conversationId: 1, createdAt: 1 }),
-        database.collection("notifications").createIndex({ userId: 1, isRead: 1, createdAt: 1 }),
-      ]);
-      return database;
-    }).catch((error) => {
-      globalMongo.intentLinkMongoDatabase = undefined;
-      throw error;
-    });
+
+    globalMongo.intentLinkMongoDatabase = client
+      .connect()
+      .then(async (connected) => {
+        const database = connected.db(dbName);
+
+        await Promise.all([
+          database.collection("users").createIndex(
+            { email: 1 },
+            {
+              unique: true,
+              name: "users_email_unique",
+            }
+          ),
+
+          database.collection("communityInvitations").createIndex({
+            inviteeId: 1,
+            status: 1,
+          }),
+
+          database.collection("collaborationRequests").createIndex({
+            senderId: 1,
+            status: 1,
+          }),
+
+          database.collection("collaborationRequests").createIndex({
+            receiverId: 1,
+            status: 1,
+          }),
+
+          database.collection("projectJoinRequests").createIndex({
+            projectId: 1,
+            status: 1,
+          }),
+
+          database.collection("projectJoinRequests").createIndex({
+            applicantId: 1,
+            status: 1,
+          }),
+
+          database.collection("tasks").createIndex({
+            communityId: 1,
+            status: 1,
+          }),
+
+          database.collection("tasks").createIndex({
+            projectId: 1,
+            status: 1,
+          }),
+
+          database.collection("messages").createIndex({
+            conversationId: 1,
+            createdAt: 1,
+          }),
+
+          database.collection("notifications").createIndex({
+            userId: 1,
+            isRead: 1,
+            createdAt: 1,
+          }),
+        ]);
+
+        return database;
+      })
+      .catch((error) => {
+        globalMongo.intentLinkMongoDatabase = undefined;
+        globalMongo.intentLinkMongoClient = undefined;
+        throw error;
+      });
   }
+
   return globalMongo.intentLinkMongoDatabase;
-}
-
-export async function checkDatabaseConnection() {
-  const database = await getDatabase();
-  await database.command({ ping: 1 });
-}
-
-export function getStore() {
-  return DatabaseStore.create(getDatabase());
 }
