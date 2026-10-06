@@ -14,6 +14,7 @@ export type ProjectRecord = UpdatedRecord & {
   ownerId: number; title: string; description: string; category: string; status: string;
   visibility: string; requiredSkills: string[];
 };
+
 export interface Records {
   users: UserRecord;
   communities: UpdatedRecord & { name: string; goal: string; description: string; intent: string; timeline: string; ownerId: number; maxMembers: number; stage: string; isPrivate: boolean };
