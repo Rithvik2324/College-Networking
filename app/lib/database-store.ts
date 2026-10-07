@@ -9,6 +9,10 @@ export type UserRecord = UpdatedRecord & {
   intent: string; primarySkill: string; availability: number; bio: string;
   onboardingComplete: boolean; onboardingStep: number; notificationsEnabled: boolean;
   skills: string[]; interests: string[]; skillLevels?: Record<string, string>;
+  degree?: string; specialization?: string; graduationYear?: number | null;
+  headline?: string; careerInterests?: string[]; lookingFor?: string[];
+  profileVisibility?: "public" | "college" | "connections" | "private";
+  emailVisibility?: boolean; phone?: string | null; phoneVisibility?: boolean;
 };
 export type ProjectRecord = UpdatedRecord & {
   ownerId: number; title: string; description: string; category: string; status: string;
@@ -43,7 +47,7 @@ const compositeFields: Partial<Record<Collection, string[]>> = {
 const defaults = (collection: Collection) => {
   const now = new Date();
   switch (collection) {
-    case "users": return { role: "student", college: null, department: null, yearOfStudy: null, avatarUrl: null, intent: "Project-Building", primarySkill: "Frontend", availability: 8, bio: "", onboardingComplete: false, onboardingStep: 1, notificationsEnabled: true, skills: [], interests: [], createdAt: now, updatedAt: now };
+    case "users": return { role: "student", college: null, department: null, yearOfStudy: null, avatarUrl: null, intent: "Project-Building", primarySkill: "Frontend", availability: 8, bio: "", onboardingComplete: false, onboardingStep: 1, notificationsEnabled: true, skills: [], interests: [], degree: "", specialization: "", graduationYear: null, headline: "", careerInterests: [], lookingFor: [], profileVisibility: "public", emailVisibility: false, phone: null, phoneVisibility: false, createdAt: now, updatedAt: now };
     case "communities": return { description: "", timeline: "1 Week", maxMembers: 6, stage: "Create", isPrivate: false, createdAt: now, updatedAt: now };
     case "projects": return { status: "Idea", visibility: "public", requiredSkills: [], createdAt: now, updatedAt: now };
     case "communityMembers": case "projectMembers": return { role: "member", joinedAt: now };

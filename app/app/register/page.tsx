@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -22,6 +23,10 @@ export default function RegisterPage() {
     try {
       if (!/^[^\s@]+@[^\s@]+\.(edu|ac\.in|edu\.in)$/i.test(email.trim())) {
         setError("Use your .edu or .ac.in college email address.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("The passwords do not match.");
         return;
       }
       const response = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, password }) });
@@ -48,6 +53,10 @@ export default function RegisterPage() {
           <div className="field">
             <label htmlFor="name">Full name</label>
             <input id="name" autoComplete="name" required minLength={2} maxLength={80} value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="confirm-password">Confirm password</label>
+            <input id="confirm-password" type={showPassword ? "text" : "password"} autoComplete="new-password" required minLength={8} maxLength={72} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
           </div>
           <div className="field">
             <label htmlFor="email">College email</label>
